@@ -19,9 +19,10 @@
 #define MSG_WIDTH_IS_EVEN "Error: Sirka neni liche cislo!"
 
 #define WALL_CHARACTER 'X'
+#define EMPTY_CHARACTER ' '
 
-#define TRUE 0
-#define FALSE 1
+#define TRUE 1
+#define FALSE 0
 
 int read_validate_input(int *pWidth, int *pHeight);
 int read_width_heigth(int *pWidth, int *pHeight);
@@ -29,13 +30,14 @@ int validate_input(int width, int height);
 void handle_error(int error_code);
 void print_error_message(int error_code);
 void draw_image(int width, int height);
+void draw_roof(int width, char to_draw_roof_with);
+void draw_mirror_parts_roof(int width, int middle_point_roof);
 /**
  * Draws a line
  * _input:
  *      int width: width of the line
- *      unsigned char is_solid: bool(0 = True, 1 = False) if solid whole line is made of character
+ *      unsigned int is_solid: bool(1 = True, 0 = False) if solid whole line is made of character
  */
-void draw_line(int width, unsigned char is_solid);
 void fill_line_solid(int width);
 void fill_line_sides(int width);
 void put_chars(int count, char char_to_put);
@@ -91,6 +93,7 @@ int validate_input(int width, int height)
         printf("%d", width);
         return WIDTH_IS_EVEN;
     }
+    return OK;
 }
 
 int read_width_heigth(int *pWidth, int *pHeight)
@@ -131,47 +134,67 @@ void get_error_code_to_message(int error_code, char *buffer, unsigned int size)
         snprintf(buffer, size, MSG_WIDTH_IS_EVEN);
         break;
     default:
-        snprintf(buffer, size, "No error error_code for error_code: %d\n", error_code);
+        snprintf(buffer, size, "No error message for error code: %d\n", error_code);
     }
     return;
 }
 
 void draw_image(int width, int height)
 {
-    for (int i = 0; i < height; ++i)
+    draw_roof(width, WALL_CHARACTER);
+    for (int i = 1; i <= height; ++i)
     {
-        if (i == 0 || i == height)
+        if (i == 1 || i == height)
         {
-            draw_line(width, TRUE);
+            fill_line_solid(width);
             continue;
         }
-        draw_line(width, FALSE);
-        sleep(1);
+        fill_line_sides(width);
     }
+    putchar('\n');
 }
 
-void draw_line(int width, unsigned char is_solid)
+void draw_roof(int width, char to_draw_roof_with)
 {
-    if (is_solid)
-        fill_line_solid(width);
-    else
-        fill_line_sides(width);
+    int middle_point = (width / 2) + 1;
+    put_chars(middle_point - 1, EMPTY_CHARACTER);
+    put_chars(1, to_draw_roof_with);
+    put_chars(middle_point - 1, EMPTY_CHARACTER);
+    put_chars(1, '\n');
+    draw_mirror_parts_roof(width, middle_point);
+}
+
+void draw_mirror_parts_roof(int width, int middle_point_roof)
+{
+    for (int i = middle_point_roof - 1; i >= 1; --i)
+    {
+        put_chars(i - 1, EMPTY_CHARACTER);
+        put_chars(1, WALL_CHARACTER);
+        put_chars(width - (2 * (i - 1)) - 2, EMPTY_CHARACTER);
+        put_chars(1, WALL_CHARACTER);
+        put_chars(i - 1, EMPTY_CHARACTER);
+        put_chars(1, '\n');
+    }
 }
 
 void fill_line_solid(int width)
 {
     put_chars(width, WALL_CHARACTER);
+    put_chars(1, '\n');
 }
 
 void fill_line_sides(int width)
 {
     put_chars(1, WALL_CHARACTER);
-    put_chars(width - 2, ' ');
+    put_chars(width - 2, EMPTY_CHARACTER);
     put_chars(1, WALL_CHARACTER);
+    put_chars(1, '\n');
 }
 
 void put_chars(int count, char char_to_put)
 {
+    if (count < 1)
+        return;
     for (int i = 0; i < count; ++i)
     {
         putchar(char_to_put);
