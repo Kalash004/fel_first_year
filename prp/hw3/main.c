@@ -20,9 +20,12 @@
 
 #define WALL_CHARACTER 'X'
 
+#define TRUE 0
+#define FALSE 1
 
 int read_validate_input(int *pWidth, int *pHeight);
 int read_width_heigth(int *pWidth, int *pHeight);
+int validate_input(int width, int height);
 void handle_error(int error_code);
 void print_error_message(int error_code);
 void draw_image(int width, int height);
@@ -33,10 +36,9 @@ void draw_image(int width, int height);
  *      unsigned char is_solid: bool(0 = True, 1 = False) if solid whole line is made of character
  */
 void draw_line(int width, unsigned char is_solid);
-void fill_line(int width, char tofillwith, char *str);
-void 
-
-void print_array(char arr[], unsigned int size);
+void fill_line_solid(int width);
+void fill_line_sides(int width);
+void put_chars(int count, char char_to_put);
 /**
  * Give error message for defined codes
  * _input:
@@ -69,9 +71,19 @@ int read_validate_input(int *pWidth, int *pHeight)
 {
     int width = 0;
     int height = 0;
-    int status_read_width_heigth = read_width_heigth(&width, &height);
-    if (status_read_width_heigth != OK)
-        return status_read_width_heigth;
+    int status_read_width_height = read_width_heigth(&width, &height);
+    if (status_read_width_height != OK)
+        return status_read_width_height;
+    int input_validation_result = validate_input(width, height);
+    if (input_validation_result != OK)
+        return input_validation_result;
+    *pWidth = width;
+    *pHeight = height;
+    return OK;
+}
+
+int validate_input(int width, int height)
+{
     if ((width < 3 || width > 69) || (height < 3 || height > 69))
         return INPUT_OUT_OF_BOUNDS;
     if (width % 2 == 0)
@@ -79,9 +91,6 @@ int read_validate_input(int *pWidth, int *pHeight)
         printf("%d", width);
         return WIDTH_IS_EVEN;
     }
-    *pWidth = width;
-    *pHeight = height;
-    return OK;
 }
 
 int read_width_heigth(int *pWidth, int *pHeight)
@@ -96,7 +105,6 @@ int read_width_heigth(int *pWidth, int *pHeight)
     return OK;
 }
 
-
 void print_with_newline(char *msg)
 {
     int str_elem_id = 0;
@@ -108,7 +116,6 @@ void print_with_newline(char *msg)
     }
     putchar('\n');
 }
-
 
 void get_error_code_to_message(int error_code, char *buffer, unsigned int size)
 {
@@ -135,48 +142,50 @@ void draw_image(int width, int height)
     {
         if (i == 0 || i == height)
         {
-            draw_line(width, width);
+            draw_line(width, TRUE);
             continue;
         }
-        draw_line(width, 2);
+        draw_line(width, FALSE);
         sleep(1);
     }
 }
 
 void draw_line(int width, unsigned char is_solid)
 {
-    char line[width + 1];
-    line[width] = '\0';
     if (is_solid)
-        fill_line(width, 'X');
+        fill_line_solid(width);
     else
-        fill_line(1, width, ' ', &line[0]);
-    print_array(line, width + 1);
+        fill_line_sides(width);
 }
 
-void fill_line(unsigned int start_point, unsigned int end_point, char tofillwith, char *str)
+void fill_line_solid(int width)
 {
-    for (unsigned int i = start_point; i < end_point - 1; ++i)
+    put_chars(width, WALL_CHARACTER);
+}
+
+void fill_line_sides(int width)
+{
+    put_chars(1, WALL_CHARACTER);
+    put_chars(width - 2, ' ');
+    put_chars(1, WALL_CHARACTER);
+}
+
+void put_chars(int count, char char_to_put)
+{
+    for (int i = 0; i < count; ++i)
     {
-        *(str + i) = tofillwith;
+        putchar(char_to_put);
     }
 }
 
-void print_array(char *arr, unsigned int size)
+void print_error_message(int error_code)
 {
-    for (unsigned int i = 0; i < size; ++i)
-    {
-        char to_print = *(arr+i);
-        putchar(to_print);
-    }
-}
-
-void print_error_message(int error_code) {
     char buffer[100];
     get_error_code_to_message(error_code, &buffer[0], 100);
     print_with_newline(buffer);
 }
 
-void handle_error(int error_code) {
+void handle_error(int error_code)
+{
     print_error_message(error_code);
 }
