@@ -24,9 +24,11 @@
 #define TRUE 1
 #define FALSE 0
 
-int read_validate_input(int *pWidth, int *pHeight);
+int read_validate_input(int *pWidth, int *pHeight, int *pFence_size);
 int read_width_heigth(int *pWidth, int *pHeight);
-int validate_input(int width, int height);
+int read_fence_size(int *pFence_size);
+int validate_width_height(int width, int height);
+int validate_fence_size(int fence_size);
 void handle_error(int error_code);
 void print_error_message(int error_code);
 void draw_image(int width, int height);
@@ -69,22 +71,27 @@ int main(void)
     draw_image(width, height);
 }
 
-int read_validate_input(int *pWidth, int *pHeight)
+int read_validate_input(int *pWidth, int *pHeight, int *pFence_size)
 {
     int width = 0;
     int height = 0;
     int status_read_width_height = read_width_heigth(&width, &height);
     if (status_read_width_height != OK)
         return status_read_width_height;
-    int input_validation_result = validate_input(width, height);
-    if (input_validation_result != OK)
-        return input_validation_result;
+    int width_height_validation_result = validate_width_height(width, height);
+    if (width_height_validation_result != OK)
+        return width_height_validation_result;
+    int fence_size = 0;
+    int fence_size_validation_result = 0;
+    if (read_fence_size(&fence_size)) 
+      fence_size_validation_result = validate_fence_size(fence_size);
     *pWidth = width;
     *pHeight = height;
+    *pFence_size = fence_size;
     return OK;
 }
 
-int validate_input(int width, int height)
+int validate_width_height(int width, int height)
 {
     if ((width < 3 || width > 69) || (height < 3 || height > 69))
         return INPUT_OUT_OF_BOUNDS;
