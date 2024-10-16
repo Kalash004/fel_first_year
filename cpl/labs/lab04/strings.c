@@ -37,7 +37,7 @@ char* read_char() {
     //     putchar(d);
     // }
     // putchar('\n');
-    char f = *(memory + used + 1);
+    char f = memory[used+1];
     return memory;
 }
 
