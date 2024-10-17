@@ -1,11 +1,20 @@
-
 class MyPlayer:
     """_summary_ Player plays moves that give the most points.
     """   
-    # My player is bad when the payoff matix DD has biggest numbers example:
+    ###
+    # My player has 3 types of tactics:
+    # 1) count tactic : counts highest possible gain from both Defect and Cooperate  func name [_set_counting_tactic]
+    # 2) play against dumb player : this partially counters my own tactic - after 2 rounds player checks if last 2 moves are the same and if so finds a better play depending on payoff matrix
+    # 3) random tactic : i found that my player is bad in scenarios when DD is bigger than CC so this tries to counter it somehow
+    ###
+    
+    # My player is bad when the payoff matrix DD has biggest numbers example:
         # (((4,4),(10,6)),((6,10),(20,20)))
         #    CC     CD      DC      DD
         # I use random tactic at this point
+        
+    # My player is bad if some of the elements have big differences. I dont have time to fix it now so it is what it is 
+    #         matrix =  ( ((5,5),(1,70)) , ((70,1),(200,200)) )
         
     PLAYER = 0
     OPPONENT = 1
@@ -109,49 +118,48 @@ class MyPlayer:
         self.local_history.append(my_move)
     
     
-class MyStupidPlayer:
-    def __init__(self, x ,y):
-        pass
+# class MyStupidPlayer:
+#     def __init__(self, x ,y):
+#         pass
     
-    def select_move(self):
-        return False
+#     def select_move(self):
+#         return True
     
-    def record_last_moves(self, one, two):
-        pass
+#     def record_last_moves(self, one, two):
+#         pass
     
     
-class MyRandomPlayer:
-    def __init__(self, x ,y):
-        pass
+# class MyRandomPlayer:
+#     def __init__(self, x ,y):
+#         pass
     
-    def select_move(self):
-        import random
-        choice = (True, False)
-        return random.choice(choice)
+#     def select_move(self):
+#         import random
+#         choice = (True, False)
+#         return random.choice(choice)
     
-    def record_last_moves(self, one, two):
-        pass
+#     def record_last_moves(self, one, two):
+#         pass
     
     
 if __name__ == "__main__":
-        matrix =  ( ((5,5),(1,70)) , ((70,1),(2,2)) )
+        # matrix =  ( ((5,5),(1,70)) , ((70,1),(200,200)) )
         
-        round_count = 10
+        # round_count = 100
         
-        player1 = MyPlayer(matrix, round_count)
-        player2 = MyStupidPlayer(matrix, round_count)
+        # player1 = MyPlayer(matrix, round_count)
+        # player2 = MyRandomPlayer(matrix, round_count)
         
-        points_p1 = 0
-        points_p2 = 0
+        # points_p1 = 0
+        # points_p2 = 0
         
-        for i in range(0, 9):
-            p1_move = player1.select_move()
-            p2_move = player2.select_move()
-            points_p1 += matrix[p1_move][p2_move][0]
-            points_p2 += matrix[p1_move][p2_move][1]
-            print(f"Player 1: {p1_move} points: {points_p1} X Player 2: {p2_move} points: {points_p2}")
-            player1.record_last_moves(p1_move, p2_move)
-            player2.record_last_moves(p2_move, p1_move)
-            
+        # for i in range(0, round_count):
+        #     p1_move = player1.select_move()
+        #     p2_move = player2.select_move()
+        #     points_p1 += matrix[p1_move][p2_move][0]
+        #     points_p2 += matrix[p1_move][p2_move][1]
+        #     print(f"Player 1: {p1_move} points: {points_p1} X Player 2: {p2_move} points: {points_p2}")
+        #     player1.record_last_moves(p1_move, p2_move)
+        #     player2.record_last_moves(p2_move, p1_move)
+        pass    
         
-        # print(mp.select_move())
