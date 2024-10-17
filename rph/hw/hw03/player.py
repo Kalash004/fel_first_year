@@ -6,17 +6,14 @@ class MyPlayer:
         self.PLAYER = 0
         self.COOPERATE = 0
         self.DEFECT = 1
-        
-        if iteration_count is not None:
-            self.iter_count = iteration_count
-        else:
-            self.iter_count = iteration_count
+        self.iter_count = iteration_count
         self.pay_off_matrix = pay_off_matrix
         self.move_history: [()] = [] # type: ignore
             
             
     def select_move(self) -> bool:
-        return self.count_best_move()
+        
+        return self.count_best_move() 
     
     def record_last_moves(self, input1, input2):
         self.move_history.append((input1, input2))    
