@@ -21,20 +21,37 @@ class MyVector:
         return self * other == 0
     
     
-    def cross_product(self, other)
+    def cross_product(self, other):
         """
         For 3 dimensionla vectors only
         """
-        if !(len(self.lst) == 3 and len(other.lst) == 3)
+        if not (len(self.lst) == 3 and len(other.lst) == 3):
             return None # raise exception
         cross_x = self.lst[1] * other.lst[2] + self.lst[2] * other.lst[0]
         cross_y = self.lst[2] * other.lst[0] + self.lst[0] * other.lst[1]
         cross_z = self.lst[0] * other.lst[1] + self.lst[1] * other.lst[2]
         return MyVector([cross_x,cross_y,cross_z])
+    
+    def __add__(self, other):
+        if (len(self.lst) != len(other.lst)):
+            return None # raise exception
+        new_lst = []
+        for i in range(0, len(self.lst)):
+            new_lst.append(self.lst[i] + other.lst[i])
+        return MyVector(new_lst)
+
+    def norm(self):
+        import math
+        norm = 0
+        for v in self.lst:
+            norm += v * v
+        norm = math.sqrt(norm) 
+        return norm   
             
 if __name__ == "__main__":
     vec1 = MyVector([1,2,3]) # vektory mohou byt i jine dimenze nez 3!
     vec2 = MyVector([3,4,5]) 
-    print(vec1.get_vector()) # priklad ziskani seznamu
-    dot_product = vec1*vec2  # vypocet skalarniho soucinu, pretizeny operator *, vola se __mul__
-    print(dot_product)       # jen kontrolni vypis
+    vec3 = vec1 + vec2
+    vec4 = MyVector([3,4])
+    print(vec3.get_vector())
+    print(vec4.norm())
