@@ -1,22 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void print_fraction(int numerator, int denomerator);
+void print_fraction(int numerator, int denominator);
 int gcd(int x, int y);
 int read_input(int *ret_num_x, int *ret_num_y);
 
 typedef struct simplified_fractions
 {
     int numerator;
-    int denomerator;
+    int denominator;
 } simpl_fract;
 
 simpl_fract simplify(int x, int y, int gcd);
 
 int main(void)
 {
-    int numerator, denomerator;
-    int ret = read_input(&numerator, &denomerator);
+    int numerator, denominator;
+    int ret = read_input(&numerator, &denominator);
     if (ret != 0)
     {
         return ret;
@@ -26,9 +26,9 @@ int main(void)
         printf("%i\n", 0);
         return 0;
     }
-    int greatest_common_divisor = gcd(numerator, denomerator);
-    simpl_fract fract = simplify(numerator, denomerator, greatest_common_divisor);
-    print_fraction(fract.numerator, fract.denomerator);
+    int greatest_common_divisor = gcd(numerator, denominator);
+    simpl_fract fract = simplify(numerator, denominator, greatest_common_divisor);
+    print_fraction(fract.numerator, fract.denominator);
     return 0;
 }
 
@@ -80,7 +80,7 @@ simpl_fract simplify(int x, int y, int gcd)
     return simpl_fr;
 }
 
-void print_fraction(int numerator, int denomerator)
+void print_fraction(int numerator, int denominator)
 {
-    printf("%i / %i\n", numerator, denomerator);
+    printf("%i / %i\n", numerator, denominator);
 }
