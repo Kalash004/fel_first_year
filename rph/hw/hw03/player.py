@@ -126,48 +126,48 @@ class MyPlayer:
         self.local_history.append(my_move)
     
     
-class MyStupidPlayer:
-    def __init__(self, x ,y):
-        pass
+# class MyStupidPlayer:
+#     def __init__(self, x ,y):
+#         pass
     
-    def select_move(self):
-        return True
+#     def select_move(self):
+#         return True
     
-    def record_last_moves(self, one, two):
-        pass
+#     def record_last_moves(self, one, two):
+#         pass
     
     
-class MyRandomPlayer:
-    def __init__(self, x ,y):
-        pass
+# class MyRandomPlayer:
+#     def __init__(self, x ,y):
+#         pass
     
-    def select_move(self):
-        import random
-        choice = (True, False)
-        return random.choice(choice)
+#     def select_move(self):
+#         import random
+#         choice = (True, False)
+#         return random.choice(choice)
     
-    def record_last_moves(self, one, two):
-        pass
+#     def record_last_moves(self, one, two):
+#         pass
     
     
 if __name__ == "__main__":
-        matrix =  ( ((5,5),(1,70)) , ((70,1),(200,200)) )
+        # matrix =  ( ((5,5),(1,70)) , ((70,1),(200,200)) )
         
-        round_count = 100
+        # round_count = 100
         
-        player1 = MyPlayer(matrix, round_count)
-        player2 = MyRandomPlayer(matrix, round_count)
+        # player1 = MyPlayer(matrix, round_count)
+        # player2 = MyRandomPlayer(matrix, round_count)
         
-        points_p1 = 0
-        points_p2 = 0
+        # points_p1 = 0
+        # points_p2 = 0
         
-        for i in range(0, round_count):
-            p1_move = player1.select_move()
-            p2_move = player2.select_move()
-            points_p1 += matrix[p1_move][p2_move][0]
-            points_p2 += matrix[p1_move][p2_move][1]
-            print(f"Player 1: {p1_move} points: {points_p1} X Player 2: {p2_move} points: {points_p2}")
-            player1.record_last_moves(p1_move, False)
-            player2.record_last_moves(None, None)
+        # for i in range(0, round_count):
+        #     p1_move = player1.select_move()
+        #     p2_move = player2.select_move()
+        #     points_p1 += matrix[p1_move][p2_move][0]
+        #     points_p2 += matrix[p1_move][p2_move][1]
+        #     print(f"Player 1: {p1_move} points: {points_p1} X Player 2: {p2_move} points: {points_p2}")
+        #     player1.record_last_moves(p1_move, False)
+        #     player2.record_last_moves(None, None)
         pass    
         
