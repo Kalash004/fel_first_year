@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 // ------------------ Error codes and messaged definitions ------------------------
 
@@ -18,19 +19,20 @@
 /// @param argc int Parameter count
 /// @return Ok if there is only one parameter, otherwise UNKNOWN_ERROR_CODE
 int check_parameters_length_is_one(int argc);
-char read_parameter(char *argv);
+char read_parameter(char **argv);
 int check_parameter(char parameter);
 
 // ----- Operand handling -----------
 
 void get_operand_in_int(int *pOperand);
-int read_operand_in_char(char *pBuffer);
+int read_operand_in_char(char **pBuffer);
 char get_operand_type(char arr[], char *pType);
 int save_to_int(char *str, int *num, char type);
 int check_operand(char arr[], char type);
 int check_operand_decimal(char arr[]);
 int check_operand_hex(char arr[]);
 int check_operand_octal(char arr[]);
+void is_negative(char buffer[], int pB_negative_flag);
 
 // ---- Operation handling ----------
 
@@ -47,42 +49,49 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 
 void print_with_newline(char msg[]);
 int is_char_in_array(char c, int arr_size, char arr[]);
-int read_unknown_size_input(char *pBuffer);
+int read_unknown_size_input(char **pBuffer);
 
 // ============================= Program =================================
 
-int main(int argc, char *argv)
+// int main(int argc, char **argv)
+// {
+//     // --------- obtain and check parameter --------
+
+//     int result_param_size_check = check_parameters_length_is_one(argc);
+//     if (result_param_size_check != OK)
+//     {
+//         handle_fatal_error(result_param_size_check);
+//     }
+//     char parameter = read_parameter(argv);
+//     int result_param_check = check_parameter(parameter);
+//     if (result_param_check != OK)
+//     {
+//         handle_fatal_error(result_param_check);
+//     }
+
+//     // --------- obtain and check operand_1 --------
+
+//     int operand_1;
+//     get_operand_in_int(&operand_1);
+
+//     // --------- obtain and check operation ---------
+
+//     char operation;
+//     get_operation(&operation);
+
+//     // --------- obtain and check operand_2 --------
+
+//     int operand_2;
+//     get_operand_in_int(&operand_2);
+
+//     // --------- do math ------------------
+// }
+
+int main(void)
 {
-    // --------- obtain and check parameter --------
-
-    int result_param_size_check = check_parameters_length_is_one(argc);
-    if (result_param_size_check != OK)
-    {
-        handle_fatal_error(result_param_size_check);
-    }
-    char parameter = read_parameter(argv);
-    int result_param_check = check_parameter(parameter);
-    if (result_param_check != OK)
-    {
-        handle_fatal_error(result_param_check);
-    }
-
-    // --------- obtain and check operand_1 --------
-
     int operand_1;
     get_operand_in_int(&operand_1);
-
-    // --------- obtain and check operation ---------
-
-    char operation;
-    get_operation(&operation);
-
-    // --------- obtain and check operand_2 --------
-
-    int operand_2;
-    get_operand_in_int(&operand_2);
-
-    // --------- do math ------------------
+    printf("%d", operand_1);
 }
 
 // ---------------- Parameter Handling ---------------------------------
@@ -104,15 +113,16 @@ int is_char_in_array(char c, int arr_size, char arr[])
     return FALSE;
 }
 
-char read_parameter(char *argv)
+char read_parameter(char **argv)
 {
-    return argv[1];
+    return *argv[1];
 }
 
 int check_parameter(char parameter)
 {
     if (!is_char_in_array(parameter, 3, (char[]){'d', 'x', 'o'}))
         return UNKNOWN_ERROR_CODE;
+    return OK;
 }
 
 // ---------------- Operands Handling ----------------------------------
@@ -120,12 +130,14 @@ int check_parameter(char parameter)
 void get_operand_in_int(int *pOperand)
 {
     char *buffer;
-    int buffer_size = read_operand_in_char(buffer);
+    int b_negative = FALSE;
+    int buffer_size = read_operand_in_char(&buffer);
+    is_negative(*buffer, &b_negative);
     if (buffer_size < 1)
     {
 
         free(buffer);
-        handle_fatal_error(buffer);
+        handle_fatal_error(WRONG_OPERAND);
     }
     char type;
     int operand_type_check = get_operand_type(buffer, &type);
@@ -142,17 +154,18 @@ void get_operand_in_int(int *pOperand)
         handle_fatal_error(operand_check);
     }
     save_to_int(buffer, pOperand, type);
+    free(buffer);
 }
 
-int read_operand_in_char(char *pBuffer)
+int read_operand_in_char(char **pBuffer)
 {
     return read_unknown_size_input(pBuffer);
 }
 
-int read_unknown_size_input(char *pBuffer)
+int read_unknown_size_input(char **pBuffer)
 {
     int allocated = 5;
-    int used = -1;
+    int used = 0;
     char *memory = malloc(allocated);
     char temp_char;
     do
@@ -163,19 +176,22 @@ int read_unknown_size_input(char *pBuffer)
             allocated *= 2;
             memory = realloc(memory, allocated);
         }
+        if (temp_char == '\n')
+            break;
         memory[used] = temp_char;
+        ++used;
     } while (temp_char != '\n');
     memory[used + 1] = '\0';
-    pBuffer = memory;
+    *pBuffer = memory;
     return used + 1;
 }
 
 char get_operand_type(char arr[], char *pType)
 {
-    if (arr[0] != '0')
-        *pType = 'd';
     if (arr[1] == 'x')
         *pType = 'x';
+    if (arr[0] != '0')
+        *pType = 'd';
     if (arr[0] == '0')
         *pType = 'o';
     if (!is_char_in_array(*pType, 3, (char[]){'d', 'o', 'x'}))
@@ -187,13 +203,14 @@ char get_operand_type(char arr[], char *pType)
 
 int save_to_int(char *str, int *num, char type)
 {
+    unsigned int unsigned_num;
     switch (type)
     {
     case 'x':
-        sscanf(str, "%x", num);
+        sscanf(str, "%x", &unsigned_num);
         break;
     case 'o':
-        sscanf(str, "%o", num);
+        sscanf(str, "%o", &unsigned_num);
         break;
     case 'd':
         sscanf(str, "%d", num);
@@ -231,12 +248,15 @@ int check_operand_decimal(char arr[])
     do
     {
         temp_char = arr[i];
+        if (temp_char == '\0')
+            break;
         if (!is_char_in_array(temp_char, 10, (char[]){'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}))
         {
             return WRONG_OPERAND;
         }
         ++i;
     } while (temp_char != '\0');
+    return OK;
 }
 
 int check_operand_hex(char arr[])
@@ -246,12 +266,15 @@ int check_operand_hex(char arr[])
     do
     {
         temp_char = arr[i];
+        if (temp_char == '\0')
+            break;
         if (!is_char_in_array(temp_char, 10, (char[]){'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'B', 'C', 'D', 'E', 'F'}))
         {
             return WRONG_OPERAND; // TODO: Change to right error code
         }
         ++i;
     } while (temp_char != '\0');
+    return OK;
 }
 
 int check_operand_octal(char arr[])
@@ -261,19 +284,47 @@ int check_operand_octal(char arr[])
     do
     {
         temp_char = arr[i];
+        if (temp_char == '\0')
+            break;
         if (!is_char_in_array(temp_char, 10, (char[]){'1', '2', '3', '4', '5', '6', '7', '0'}))
         {
             return WRONG_OPERAND;
         }
         ++i;
     } while (temp_char != '\0');
+    return OK;
+}
+
+void cut_minus(char **buffer)
+{ // <--------
+    char temp_char;
+    do
+    {
+        temp_char = *buffer[]
+    } while (temp_char != '\0');
+}
+
+void is_negative(char buffer[], int *pB_negative_flag)
+{
+    if (buffer[0] == '-')
+    {
+        *pB_negative_flag = TRUE;
+        return;
+    }
+    *pB_negative_flag = FALSE;
 }
 
 // ---------------- Operation Handling --------------------------------
 
 void get_operation(char *pOperation)
 {
-    
+    char operation;
+    scanf("%c", &operation);
+    if (!is_char_in_array(operation, 4, (char[]){'-', '+', '*', '/'}))
+    {
+        handle_fatal_error(WRONG_OPERATOR_CODE);
+    }
+    *pOperation = operation;
 }
 
 // ---------------- Error Handling -------------------------------------
@@ -281,7 +332,7 @@ void get_operation(char *pOperation)
 void handle_fatal_error(int code)
 {
     print_error_message(code);
-    exit();
+    exit(code);
 }
 
 void handle_non_fatal_error(int code)
