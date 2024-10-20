@@ -304,6 +304,19 @@ void cut_minus(char **buffer)
     } while (temp_char != '\0');
 }
 
+void shift_char_array_left(int shift_index, int arr_size, char arr[], char **buffer)
+{
+    for (int i, used = 0; i < arr_size - 1; ++i)
+    {
+        if (i < shift_index)
+        {
+            continue;
+        }
+        *buffer[used] = arr[i];
+        ++used;
+    }
+}
+
 void is_negative(char buffer[], int *pB_negative_flag)
 {
     if (buffer[0] == '-')
