@@ -141,7 +141,7 @@ void get_operand_in_int(int *pOperand)
     {
         cut_minus(&buffer, buffer_size);
     }
-    if (buffer_size < 1)
+    if (buffer_size <= 1)
     {
 
         free(buffer);
@@ -162,7 +162,7 @@ void get_operand_in_int(int *pOperand)
         handle_fatal_error(operand_check);
     }
     save_to_int(buffer, pOperand, type);
-    if (b_negative) 
+    if (b_negative)
         *pOperand = -1 * *pOperand;
     free(buffer);
 }
@@ -199,11 +199,21 @@ int read_unknown_size_input(char **pBuffer)
 char get_operand_type(char arr[], char *pType)
 {
     if (arr[1] == 'x')
+    {
         *pType = 'x';
+        return OK;
+    }
     if (arr[0] != '0')
+    {
+
         *pType = 'd';
+        return OK;
+    }
     if (arr[0] == '0')
+    {
         *pType = 'o';
+        return OK;
+    }
     if (!is_char_in_array(*pType, 3, (char[]){'d', 'o', 'x'}))
     {
         return UNKNOWN_ERROR_CODE;
@@ -213,14 +223,13 @@ char get_operand_type(char arr[], char *pType)
 
 int save_to_int(char *str, int *num, char type)
 {
-    unsigned int unsigned_num;
     switch (type)
     {
     case 'x':
-        sscanf(str, "%x", &unsigned_num);
+        sscanf(str, "%x", (unsigned int*)num);
         break;
     case 'o':
-        sscanf(str, "%o", &unsigned_num);
+        sscanf(str, "%o", (unsigned int*)num);
         break;
     case 'd':
         sscanf(str, "%d", num);
