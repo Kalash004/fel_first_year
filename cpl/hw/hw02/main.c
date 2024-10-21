@@ -33,6 +33,7 @@ int check_operand_decimal(char arr[]);
 int check_operand_hex(char arr[]);
 int check_operand_octal(char arr[]);
 void is_negative(char buffer[], int *pB_negative_flag);
+void cut_minus(char *buffer[], int buffer_size);
 
 // ---- Operation handling ----------
 
@@ -52,6 +53,7 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 void print_with_newline(char msg[]);
 int is_char_in_array(char c, int arr_size, char arr[]);
 int read_unknown_size_input(char **pBuffer);
+void shift_char_array_left(int shift_index, int arr_size, char *buffer[]);
 
 // ============================= Program =================================
 
@@ -134,7 +136,11 @@ void get_operand_in_int(int *pOperand)
     char *buffer;
     int b_negative = FALSE;
     int buffer_size = read_operand_in_char(&buffer);
-    is_negative(*buffer, &b_negative);
+    is_negative(buffer, &b_negative);
+    if (b_negative)
+    {
+        cut_minus(&buffer, buffer_size);
+    }
     if (buffer_size < 1)
     {
 
@@ -156,6 +162,8 @@ void get_operand_in_int(int *pOperand)
         handle_fatal_error(operand_check);
     }
     save_to_int(buffer, pOperand, type);
+    if (b_negative) 
+        *pOperand = -1 * *pOperand;
     free(buffer);
 }
 
@@ -297,24 +305,22 @@ int check_operand_octal(char arr[])
     return OK;
 }
 
-void cut_minus(char **buffer)
+void cut_minus(char **buffer, int buffer_size)
 { // <--------
-    char temp_char;
-    do
-    {
-        temp_char = *buffer[]
-    } while (temp_char != '\0');
+    shift_char_array_left(1, buffer_size, buffer);
 }
 
-void shift_char_array_left(int shift_index, int arr_size, char arr[], char **buffer)
+void shift_char_array_left(int shift_index, int arr_size, char **buffer)
 {
-    for (int i, used = 0; i < arr_size - 1; ++i)
+    int used = 0;
+    for (int i = 0; i < arr_size; ++i)
     {
         if (i < shift_index)
         {
             continue;
         }
-        *buffer[used] = arr[i];
+        char temp_char = (*buffer)[i];
+        (*buffer)[used] = temp_char;
         ++used;
     }
 }
