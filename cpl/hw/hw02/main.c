@@ -32,7 +32,7 @@ int check_operand(char arr[], char type);
 int check_operand_decimal(char arr[]);
 int check_operand_hex(char arr[]);
 int check_operand_octal(char arr[]);
-void is_negative(char buffer[], int pB_negative_flag);
+void is_negative(char buffer[], int *pB_negative_flag);
 
 // ---- Operation handling ----------
 
@@ -40,6 +40,8 @@ void get_operation(char *pOperation);
 
 // ------ Error handling functions ----------------
 
+/// @brief Same as handle_non_fatal_error but exits the program at the end
+/// @param code Error code number
 void handle_fatal_error(int code);
 void handle_non_fatal_error(int code);
 void print_error_message(int code);

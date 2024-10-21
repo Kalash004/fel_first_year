@@ -107,7 +107,6 @@ int read_input(int *ret_num)
 void calculate_stats(int input, Stats *stats)
 {
     (*stats).input_count++;
-    // TODO check for ++i i++
     if (input > 0)
         stats->positive_nums_count++;
     if (input < 0)
