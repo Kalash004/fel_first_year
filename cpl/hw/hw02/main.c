@@ -20,7 +20,7 @@
 /// @return Ok if there is only one parameter, otherwise UNKNOWN_ERROR_CODE
 int check_parameters_length_is_one(int argc);
 char read_parameter(char **argv);
-int check_parameter(char parameter);
+int check_parameter(char type_of_output);
 
 // ----- Operand handling -----------
 
@@ -48,6 +48,21 @@ void handle_non_fatal_error(int code);
 void print_error_message(int code);
 void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size);
 
+// ------- Math -------------------------------
+
+void do_math(int *math_result, int operand_1, char operation, int operand_2);
+int math_sum(int operand1, int operand2);
+int math_subtraction(int operand1, int operand2);
+int math_multiply(int operand1, int operand2);
+int math_division(int operand1, int operand2);
+
+// ------- Print output ------------------------
+
+void print_result(int output, char type_of_output);
+void print_hex(int output);
+void print_decimal(int output);
+void print_octal(int output);
+
 // ----- Utils -----------------------
 
 void print_with_newline(char msg[]);
@@ -57,45 +72,45 @@ void shift_char_array_left(int shift_index, int arr_size, char *buffer[]);
 
 // ============================= Program =================================
 
-// int main(int argc, char **argv)
-// {
-//     // --------- obtain and check parameter --------
-
-//     int result_param_size_check = check_parameters_length_is_one(argc);
-//     if (result_param_size_check != OK)
-//     {
-//         handle_fatal_error(result_param_size_check);
-//     }
-//     char parameter = read_parameter(argv);
-//     int result_param_check = check_parameter(parameter);
-//     if (result_param_check != OK)
-//     {
-//         handle_fatal_error(result_param_check);
-//     }
-
-//     // --------- obtain and check operand_1 --------
-
-//     int operand_1;
-//     get_operand_in_int(&operand_1);
-
-//     // --------- obtain and check operation ---------
-
-//     char operation;
-//     get_operation(&operation);
-
-//     // --------- obtain and check operand_2 --------
-
-//     int operand_2;
-//     get_operand_in_int(&operand_2);
-
-//     // --------- do math ------------------
-// }
-
-int main(void)
+int main(int argc, char **argv)
 {
+    // --------- obtain and check parameter --------
+
+    int result_param_size_check = check_parameters_length_is_one(argc);
+    if (result_param_size_check != OK)
+    {
+        handle_fatal_error(result_param_size_check);
+    }
+    char type_of_output = read_parameter(argv);
+    int result_param_check = check_parameter(type_of_output);
+    if (result_param_check != OK)
+    {
+        handle_fatal_error(result_param_check);
+    }
+
+    // --------- obtain and check operand_1 --------
+
     int operand_1;
     get_operand_in_int(&operand_1);
-    printf("%d", operand_1);
+
+    // --------- obtain and check operation ---------
+
+    char operation;
+    get_operation(&operation);
+
+    // --------- obtain and check operand_2 --------
+
+    int operand_2;
+    get_operand_in_int(&operand_2);
+
+    // --------- do math ------------------
+
+    int math_result;
+    do_math(&math_result, operand_1, operation, operand_2);
+
+    // --------- print result -------------
+
+    print_result(math_result, type_of_output);
 }
 
 // ---------------- Parameter Handling ---------------------------------
@@ -191,9 +206,9 @@ int read_unknown_size_input(char **pBuffer)
         memory[used] = temp_char;
         ++used;
     } while (temp_char != '\n');
-    memory[used + 1] = '\0';
+    memory[used] = '\0';
     *pBuffer = memory;
-    return used + 1;
+    return used;
 }
 
 char get_operand_type(char arr[], char *pType)
@@ -226,10 +241,10 @@ int save_to_int(char *str, int *num, char type)
     switch (type)
     {
     case 'x':
-        sscanf(str, "%x", (unsigned int*)num);
+        sscanf(str, "%x", (unsigned int *)num);
         break;
     case 'o':
-        sscanf(str, "%o", (unsigned int*)num);
+        sscanf(str, "%o", (unsigned int *)num);
         break;
     case 'd':
         sscanf(str, "%d", num);
@@ -315,7 +330,7 @@ int check_operand_octal(char arr[])
 }
 
 void cut_minus(char **buffer, int buffer_size)
-{ // <--------
+{
     shift_char_array_left(1, buffer_size, buffer);
 }
 
@@ -332,6 +347,7 @@ void shift_char_array_left(int shift_index, int arr_size, char **buffer)
         (*buffer)[used] = temp_char;
         ++used;
     }
+    (*buffer)[used] = '\0';
 }
 
 void is_negative(char buffer[], int *pB_negative_flag)
@@ -355,6 +371,51 @@ void get_operation(char *pOperation)
         handle_fatal_error(WRONG_OPERATOR_CODE);
     }
     *pOperation = operation;
+    char c = getchar();
+    if (c != '\n')
+        handle_fatal_error(WRONG_OPERATOR_CODE);
+
+}
+
+
+
+// ---------------- Math ----------------------------------------------
+
+void do_math(int *math_result, int operand_1, char operation, int operand_2)
+{
+    switch (operation)
+    {
+    case '+':
+        *math_result = math_sum(operand_1, operand_2);
+        break;
+    case '*':
+        *math_result = math_multiply(operand_1, operand_2);
+        break;
+    case '-':
+        *math_result = math_subtraction(operand_1, operand_2);
+        break;
+    case '/':
+        *math_result = math_division(operand_1, operand_2);
+        break;
+    default:
+        break;
+    }
+}
+int math_sum(int operand1, int operand2)
+{
+    return operand1 + operand2;
+}
+int math_subtraction(int operand1, int operand2)
+{
+    return operand1 - operand2;
+}
+int math_multiply(int operand1, int operand2)
+{
+    return operand1 * operand2;
+}
+int math_division(int operand1, int operand2)
+{
+    return operand1 / operand2;
 }
 
 // ---------------- Error Handling -------------------------------------
@@ -408,4 +469,35 @@ void print_with_newline(char msg[])
         ++str_elem_id;
     } while (msg[str_elem_id] != '\0');
     putchar('\n');
+}
+
+void print_result(int output, char type_of_output)
+{
+    switch (type_of_output)
+    {
+    case 'o':
+        print_octal(output);
+        break;
+    case 'd':
+        print_decimal(output);
+        break;
+    case 'x':
+        print_hex(output);
+        break;
+    default:
+        handle_fatal_error(UNKNOWN_ERROR_CODE);
+        break;
+    }
+}
+void print_hex(int output)
+{
+    printf("%X", output);
+}
+void print_decimal(int output)
+{
+    printf("%d", output);
+}
+void print_octal(int output)
+{
+    printf("%o", output);
 }
