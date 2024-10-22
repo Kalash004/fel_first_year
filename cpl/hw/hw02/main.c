@@ -24,10 +24,10 @@ int check_parameter(char type_of_output);
 
 // ----- Operand handling -----------
 
-void get_operand_in_int(int *pOperand);
+void get_operand_in_int(long long int *pOperand);
 int read_operand_in_char(char **pBuffer);
 char get_operand_type(char arr[], char *pType);
-int save_to_int(char *str, int *num, char type);
+int save_to_int(char *str, long long int *num, char type);
 int check_operand(char arr[], char type);
 int check_operand_decimal(char arr[]);
 int check_operand_hex(char arr[]);
@@ -50,18 +50,19 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 
 // ------- Math -------------------------------
 
-void do_math(int *math_result, int operand_1, char operation, int operand_2);
-int math_sum(int operand1, int operand2);
-int math_subtraction(int operand1, int operand2);
-int math_multiply(int operand1, int operand2);
-int math_division(int operand1, int operand2);
+void do_math(long long int *math_result, long long int operand_1, char operation, long long int operand_2);
+long long int math_sum(long long int operand1, long long int operand2);
+long long int math_subtraction(long long int operand1, long long int operand2);
+long long int math_multiply(long long int operand1, long long int operand2);
+long long int math_division(long long int operand1, long long int operand2);
 
 // ------- Print output ------------------------
 
-void print_result(int output, char type_of_output);
-void print_hex(int output);
-void print_decimal(int output);
-void print_octal(int output);
+void print_result(long long int output, char type_of_output);
+void print_hex_negative(long long int output);
+void print_hex(long long int output);
+void print_decimal(long long int output);
+void print_octal(long long int output);
 
 // ----- Utils -----------------------
 
@@ -90,7 +91,7 @@ int main(int argc, char **argv)
 
     // --------- obtain and check operand_1 --------
 
-    int operand_1;
+    long long int operand_1;
     get_operand_in_int(&operand_1);
 
     // --------- obtain and check operation ---------
@@ -100,12 +101,12 @@ int main(int argc, char **argv)
 
     // --------- obtain and check operand_2 --------
 
-    int operand_2;
+    long long int operand_2;
     get_operand_in_int(&operand_2);
 
     // --------- do math ------------------
 
-    int math_result;
+    long long int math_result;
     do_math(&math_result, operand_1, operation, operand_2);
 
     // --------- print result -------------
@@ -146,7 +147,7 @@ int check_parameter(char parameter)
 
 // ---------------- Operands Handling ----------------------------------
 
-void get_operand_in_int(int *pOperand)
+void get_operand_in_int(long long int *pOperand)
 {
     char *buffer;
     int b_negative = FALSE;
@@ -236,18 +237,18 @@ char get_operand_type(char arr[], char *pType)
     return OK;
 }
 
-int save_to_int(char *str, int *num, char type)
+int save_to_int(char *str, long long int *num, char type)
 {
     switch (type)
     {
     case 'x':
-        sscanf(str, "%x", (unsigned int *)num);
+        sscanf(str, "%llx", (long long unsigned int *)num);
         break;
     case 'o':
-        sscanf(str, "%o", (unsigned int *)num);
+        sscanf(str, "%llo", (long long unsigned int *)num);
         break;
     case 'd':
-        sscanf(str, "%d", num);
+        sscanf(str, "%lli", num);
         break;
     default:
         return UNKNOWN_ERROR_CODE;
@@ -284,7 +285,9 @@ int check_operand_decimal(char arr[])
         temp_char = arr[i];
         if (temp_char == '\0')
             break;
-        if (!is_char_in_array(temp_char, 10, (char[]){'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}))
+        char template[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+        int template_length = sizeof(template) / sizeof(char);
+        if (!is_char_in_array(temp_char, template_length, template))
         {
             return WRONG_OPERAND;
         }
@@ -302,7 +305,9 @@ int check_operand_hex(char arr[])
         temp_char = arr[i];
         if (temp_char == '\0')
             break;
-        if (!is_char_in_array(temp_char, 10, (char[]){'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'B', 'C', 'D', 'E', 'F'}))
+        char template[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'A', 'B', 'C', 'D', 'E', 'F'};
+        int template_length = sizeof(template) / sizeof(char);
+        if (!is_char_in_array(temp_char, template_length, template))
         {
             return WRONG_OPERAND; // TODO: Change to right error code
         }
@@ -320,7 +325,9 @@ int check_operand_octal(char arr[])
         temp_char = arr[i];
         if (temp_char == '\0')
             break;
-        if (!is_char_in_array(temp_char, 10, (char[]){'1', '2', '3', '4', '5', '6', '7', '0'}))
+        char template[] = {'1', '2', '3', '4', '5', '6', '7', '0'};
+        int template_length = sizeof(template) / sizeof(char);
+        if (!is_char_in_array(temp_char, template_length, template))
         {
             return WRONG_OPERAND;
         }
@@ -378,7 +385,7 @@ void get_operation(char *pOperation)
 
 // ---------------- Math ----------------------------------------------
 
-void do_math(int *math_result, int operand_1, char operation, int operand_2)
+void do_math(long long int *math_result, long long int operand_1, char operation, long long int operand_2)
 {
     switch (operation)
     {
@@ -398,19 +405,19 @@ void do_math(int *math_result, int operand_1, char operation, int operand_2)
         break;
     }
 }
-int math_sum(int operand1, int operand2)
+long long int math_sum(long long int operand1, long long int operand2)
 {
     return operand1 + operand2;
 }
-int math_subtraction(int operand1, int operand2)
+long long int math_subtraction(long long int operand1, long long int operand2)
 {
     return operand1 - operand2;
 }
-int math_multiply(int operand1, int operand2)
+long long int math_multiply(long long int operand1, long long int operand2)
 {
     return operand1 * operand2;
 }
-int math_division(int operand1, int operand2)
+long long int math_division(long long int operand1, long long int operand2)
 {
     return operand1 / operand2;
 }
@@ -468,7 +475,7 @@ void print_with_newline(char msg[])
     putchar('\n');
 }
 
-void print_result(int output, char type_of_output)
+void print_result(long long int output, char type_of_output)
 {
     switch (type_of_output)
     {
@@ -479,6 +486,11 @@ void print_result(int output, char type_of_output)
         print_decimal(output);
         break;
     case 'x':
+        if (output < 0)
+        {
+            print_hex_negative(output * -1);
+            break;
+        }
         print_hex(output);
         break;
     default:
@@ -486,15 +498,19 @@ void print_result(int output, char type_of_output)
         break;
     }
 }
-void print_hex(int output)
+void print_hex(long long int output)
 {
-    printf("%X\n", output);
+    printf("0x%llX\n", output);
 }
-void print_decimal(int output)
+void print_hex_negative(long long int output)
 {
-    printf("%d\n", output);
+    printf("-0x%llX\n", output);
 }
-void print_octal(int output)
+void print_decimal(long long int output)
 {
-    printf("%o\n", output);
+    printf("%lli\n", output);
+}
+void print_octal(long long int output)
+{
+    printf("%llo\n", output);
 }
