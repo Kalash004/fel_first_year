@@ -24,6 +24,8 @@ int check_parameter(char type_of_output);
 
 // ----- Operand handling -----------
 
+/// @brief Reads input, checks for errors, sends to operand pointer
+/// @param pOperand
 void get_operand_in_int(long long int *pOperand);
 int read_operand_in_char(char **pBuffer);
 char get_operand_type(char arr[], char *pType);
@@ -44,6 +46,8 @@ void get_operation(char *pOperation);
 /// @brief Same as handle_non_fatal_error but exits the program at the end
 /// @param code Error code number
 void handle_fatal_error(int code);
+/// @brief Finds error code, and prints it
+/// @param code Error code number
 void handle_non_fatal_error(int code);
 void print_error_message(int code);
 void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size);
@@ -68,8 +72,20 @@ void print_octal_negative(long long int output);
 // ----- Utils -----------------------
 
 void print_with_newline(char msg[]);
+/// @brief Checks if character is in the array
+/// @param c char : character to look for
+/// @param arr_size int : length of array to look in
+/// @param arr char[] : Array to look in
+/// @return int : 1 if is in array; 0 if not in array
 int is_char_in_array(char c, int arr_size, char arr[]);
+/// @brief Read char by char input with unknown size
+/// @param pBuffer **char : pointer to where this returns allocated memory to
+/// @return int : length of allocated memory
 int read_unknown_size_input(char **pBuffer);
+/// @brief Shifts array to the left ([1,2,3], [2,3])
+/// @param shift_index int : from which index to shift
+/// @param arr_size int : length of the array
+/// @param buffer  **char : pointer to array that this shifts
 void shift_char_array_left(int shift_index, int arr_size, char *buffer[]);
 
 // ============================= Program =================================
