@@ -374,10 +374,7 @@ void get_operation(char *pOperation)
     char c = getchar();
     if (c != '\n')
         handle_fatal_error(WRONG_OPERATOR_CODE);
-
 }
-
-
 
 // ---------------- Math ----------------------------------------------
 
