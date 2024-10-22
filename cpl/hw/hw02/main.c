@@ -491,13 +491,13 @@ void print_result(int output, char type_of_output)
 }
 void print_hex(int output)
 {
-    printf("%X", output);
+    printf("%X\n", output);
 }
 void print_decimal(int output)
 {
-    printf("%d", output);
+    printf("%d\n", output);
 }
 void print_octal(int output)
 {
-    printf("%o", output);
+    printf("%o\n", output);
 }
