@@ -63,6 +63,7 @@ void print_hex_negative(long long int output);
 void print_hex(long long int output);
 void print_decimal(long long int output);
 void print_octal(long long int output);
+void print_octal_negative(long long int output);
 
 // ----- Utils -----------------------
 
@@ -480,6 +481,11 @@ void print_result(long long int output, char type_of_output)
     switch (type_of_output)
     {
     case 'o':
+        if (output < 0)
+        {
+            print_octal_negative(output * -1);
+            break;
+        }
         print_octal(output);
         break;
     case 'd':
@@ -512,5 +518,9 @@ void print_decimal(long long int output)
 }
 void print_octal(long long int output)
 {
-    printf("%llo\n", output);
+    printf("0%llo\n", output);
+}
+void print_octal_negative(long long int output)
+{
+    printf("-0%llo\n", output);
 }
