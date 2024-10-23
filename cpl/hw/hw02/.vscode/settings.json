@@ -1,3 +1,7 @@
 {
-    "memory-view.showMemoryPanel": true
+    "memory-view.showMemoryPanel": true,
+    "files.associations": {
+        "*.ejs": "html",
+        "stdio.h": "c"
+    }
 }

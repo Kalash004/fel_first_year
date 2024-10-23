@@ -223,7 +223,7 @@ int read_unknown_size_input(char **pBuffer)
             break;
         memory[used] = temp_char;
         ++used;
-    } while (temp_char != '\n');
+    } while (temp_char != '\n' || temp_char != EOF);
     memory[used] = '\0';
     *pBuffer = memory;
     return used;
