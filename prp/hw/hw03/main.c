@@ -36,7 +36,7 @@ typedef struct
 int read_validate_input(SHouse_dimensions *house_dims);
 int read_width_height(int *pWidth, int *pHeight);
 int read_fence_size(int *pFence_size);
-int validate_width_height(SHouse_dimensions house_dims);
+int validate_width_height(int width, int height);
 int validate_fence_size(SHouse_dimensions house_dims);
 void handle_error(int error_code);
 void print_error_message(int error_code);
@@ -49,7 +49,8 @@ void draw_mirror_parts_roof(int width, int middle_point_roof);
  *      int width: width of the line
  *      unsigned int is_solid: bool(1 = True, 0 = False) if solid whole line is made of character
  */
-void fill_line_solid(int width);
+void fill_line_solid(SHouse_dimensions house_dim);
+void fill_line_solid_end(SHouse_dimensions house_dim);
 void fill_line_sides(int width, int current_row);
 void fill_voidness_with_pattern(int count, int starting_pattern_index, char pattern[]);
 void set_next_index_between(int *var, int min, int max);
@@ -88,7 +89,7 @@ int read_validate_input(SHouse_dimensions *house_dims)
     int status_read_width_height = read_width_height(&width, &height);
     if (status_read_width_height != OK)
         return status_read_width_height;
-    int width_height_validation_result = validate_width_height(*house_dims);
+    int width_height_validation_result = validate_width_height(width, height);
     if (width_height_validation_result != OK)
         return width_height_validation_result;
     int fence_size = 0;
@@ -103,15 +104,12 @@ int read_validate_input(SHouse_dimensions *house_dims)
     return OK;
 }
 
-int validate_width_height(SHouse_dimensions house_dims)
+int validate_width_height(int width, int height)
 {
-    int width = house_dims.width;
-    int height = house_dims.height;
     if ((width < 3 || width > 69) || (height < 3 || height > 69))
         return INPUT_OUT_OF_BOUNDS;
     if (width % 2 == 0)
     {
-        printf("%d", width);
         return WIDTH_IS_EVEN;
     }
     return OK;
@@ -167,11 +165,12 @@ void draw_image(SHouse_dimensions house_dims)
     {
         if (i == 1 || i == house_dims.height)
         {
-            fill_line_solid(house_dims.width);
+            fill_line_solid(house_dims);
             continue;
         }
         fill_line_sides(house_dims.width, i);
     }
+    fill_line_solid_end(house_dims);
     putchar('\n');
 }
 
@@ -198,9 +197,16 @@ void draw_mirror_parts_roof(int width, int middle_point_roof)
     }
 }
 
-void fill_line_solid(int width)
+void fill_line_solid(SHouse_dimensions house_dim)
 {
-    put_chars(width, WALL_CHARACTER);
+    put_chars(house_dim.width, WALL_CHARACTER);
+    put_chars(1, '\n');
+}
+
+void fill_line_solid_end(SHouse_dimensions house_dim)
+{
+    put_chars(house_dim.width, WALL_CHARACTER);
+    // put_chars(house_dim.fence_size, ) todo
     put_chars(1, '\n');
 }
 
@@ -266,7 +272,12 @@ void handle_error(int error_code)
 
 int read_fence_size(int *pFence_size)
 {
-    int ret_scan = scanf(" %d", pFence_size);
+    if (getchar() == EOF)
+    {
+        *pFence_size = 0;
+        return OK;
+    }
+    int ret_scan = scanf("%d", pFence_size);
     if (ret_scan != 1)
         return BAD_INPUT;
     return OK;
@@ -274,8 +285,9 @@ int read_fence_size(int *pFence_size)
 
 int validate_fence_size(SHouse_dimensions house_dims)
 {
-    if (house_dims.fence_size > house_dims.height) 
+    if (house_dims.fence_size > house_dims.height)
         return FENCE_SIZE_OUT_OF_BOUNDS;
-    if (house_dims.fence_size < 0) 
+    if (house_dims.fence_size < 0)
         return FENCE_SIZE_OUT_OF_BOUNDS;
+    return OK;
 }
