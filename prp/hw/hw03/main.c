@@ -47,18 +47,18 @@ int read_fence_size(SHouse_dimensions *dimensions);
 void get_print_error_message(int error_code);
 void draw_image_with_fence(SHouse_dimensions house_dims);
 void draw_roof(int width, char to_draw_roof_with);
-void draw_mirror_parts_roof(int width, int middle_point_roof);
+void draw_side_parts_roof(int width, int middle_point_roof);
 /**
  * Draws a line
  * _input:
  *      int width: width of the line
  *      unsigned int is_solid: bool(1 = True, 0 = False) if solid whole line is made of character
  */
-void fill_middle(SHouse_dimensions house_dims);
+void fill_middle_fence(SHouse_dimensions house_dims);
 void fill_middle_empty(SHouse_dimensions house_dims);
 void fill_line_solid(SHouse_dimensions house_dim);
-void fill_line_solid_end(SHouse_dimensions house_dim);
-void fill_line_sides(SHouse_dimensions house_dims, int current_row);
+void fill_line_solid_end_fenced(SHouse_dimensions house_dim);
+void fill_line_sides_fence(SHouse_dimensions house_dims, int current_row);
 void fill_line_sides_empty(SHouse_dimensions house_dims);
 void place_fence_sides(SHouse_dimensions dimensions);
 void place_fence_mid(SHouse_dimensions dimensions);
@@ -74,20 +74,18 @@ void put_chars(int count, char char_to_put);
  *      unsigned int size: size of the buffer given
  */
 void get_error_code_to_message(int error_code, char *buffer, unsigned int size);
-void draw_image(SHouse_dimensions house_dims);
+void draw_image_no_fence(SHouse_dimensions house_dims);
 /**
  * Prints message with new line at the end
  * _input:
  *      char *msg: message to print
  */
 void print_with_newline(char *msg);
-
 void print_error_message(char *msg);
 
 int main(void)
 {
     SHouse_dimensions house_dims;
-    house_dims.fence_size = 0;
     int result = read_validate_input(&house_dims);
     if (result != OK)
     {
@@ -100,13 +98,13 @@ int main(void)
     }
     else
     {
-        draw_image(house_dims);
+        draw_image_no_fence(house_dims);
     }
 }
 
 int read_validate_input(SHouse_dimensions *house_dims)
 {
-    int is_fence_size_coming = TRUE;
+    int is_fence_size_coming = FALSE; // Default : dont wait for fence
     int status_read_width_height = read_width_height(house_dims, &is_fence_size_coming);
     if (status_read_width_height != OK)
         return status_read_width_height;
@@ -114,7 +112,10 @@ int read_validate_input(SHouse_dimensions *house_dims)
     if (width_height_validation_result != OK)
         return width_height_validation_result;
     if (!is_fence_size_coming)
-        return OK;
+    {
+        house_dims->fence_size = 0;
+        return OK; // END IF NO Fence
+    }
     int ret_fence_validation = read_validate_fence(house_dims);
     if (ret_fence_validation != OK)
         return ret_fence_validation;
@@ -123,9 +124,10 @@ int read_validate_input(SHouse_dimensions *house_dims)
 
 int read_validate_fence(SHouse_dimensions *house_dims)
 {
-    int fence_size_validation_result = 0;
-    read_fence_size(house_dims);
-    fence_size_validation_result = validate_fence_size(*house_dims);
+    int read_result = read_fence_size(house_dims);
+    if (read_result != OK)
+        return read_result;
+    int fence_size_validation_result = validate_fence_size(*house_dims);
     if (fence_size_validation_result != OK)
         return fence_size_validation_result;
     if (house_dims->fence_size != 0)
@@ -156,8 +158,8 @@ int read_width_height(SHouse_dimensions *dimensions, int *pB_is_fence_size_comin
     int ret_scan = scanf("%d %d", &width, &height);
     if (ret_scan != 2)
         return BAD_INPUT;
-    if (getchar() == '\n')
-        *pB_is_fence_size_coming = FALSE;
+    if (width == height)
+        *pB_is_fence_size_coming = TRUE;
     dimensions->width = width;
     dimensions->height = height;
     return OK;
@@ -202,7 +204,7 @@ void get_error_code_to_message(int error_code, char *buffer, unsigned int size)
     return;
 }
 
-void draw_image(SHouse_dimensions house_dims)
+void draw_image_no_fence(SHouse_dimensions house_dims)
 {
     draw_roof(house_dims.width, WALL_CHARACTER);
     fill_line_solid(house_dims);
@@ -214,8 +216,8 @@ void draw_image_with_fence(SHouse_dimensions house_dims)
 {
     draw_roof(house_dims.width, WALL_CHARACTER);
     fill_line_solid(house_dims);
-    fill_middle(house_dims);
-    fill_line_solid_end(house_dims);
+    fill_middle_fence(house_dims);
+    fill_line_solid_end_fenced(house_dims);
 }
 
 void draw_roof(int width, char to_draw_roof_with)
@@ -224,10 +226,10 @@ void draw_roof(int width, char to_draw_roof_with)
     put_chars(middle_point - 1, EMPTY_CHARACTER);
     put_chars(1, to_draw_roof_with);
     put_chars(1, '\n');
-    draw_mirror_parts_roof(width, middle_point);
+    draw_side_parts_roof(width, middle_point);
 }
 
-void draw_mirror_parts_roof(int width, int middle_point_roof)
+void draw_side_parts_roof(int width, int middle_point_roof)
 {
     for (int i = middle_point_roof - 1; i > 1; --i)
     {
@@ -239,11 +241,11 @@ void draw_mirror_parts_roof(int width, int middle_point_roof)
     }
 }
 
-void fill_middle(SHouse_dimensions house_dims)
+void fill_middle_fence(SHouse_dimensions house_dims)
 {
     for (int i = 2; i <= house_dims.height - 1; ++i)
     {
-        fill_line_sides(house_dims, i);
+        fill_line_sides_fence(house_dims, i);
     }
 }
 
@@ -261,14 +263,14 @@ void fill_line_solid(SHouse_dimensions house_dim)
     put_chars(1, '\n');
 }
 
-void fill_line_solid_end(SHouse_dimensions house_dim)
+void fill_line_solid_end_fenced(SHouse_dimensions house_dim)
 {
     put_chars(house_dim.width, WALL_CHARACTER);
     place_fence_sides(house_dim);
     put_chars(1, '\n');
 }
 
-void fill_line_sides(SHouse_dimensions house_dims, int current_row)
+void fill_line_sides_fence(SHouse_dimensions house_dims, int current_row)
 {
     int pattern_start;
     if (current_row % 2 == 0)
@@ -299,14 +301,30 @@ void fill_line_sides_empty(SHouse_dimensions house_dims)
 
 void place_fence_sides(SHouse_dimensions dimensions)
 {
-    char pattern[2] = {'-', '|'};
-    print_pattern(dimensions.fence_size, pattern, 2);
+    if (dimensions.fence_size % 2 == 0)
+    {
+        char pattern[2] = {'-', '|'};
+        print_pattern(dimensions.fence_size, pattern, 2);
+    }
+    else
+    {
+        char pattern[] = {'|', '-'};
+        print_pattern(dimensions.fence_size, pattern, 2);
+    }
 }
 
 void place_fence_mid(SHouse_dimensions dimensions)
 {
-    char pattern[2] = {' ', '|'};
-    print_pattern(dimensions.fence_size, pattern, 2);
+    if (dimensions.fence_size % 2 == 0)
+    {
+        char pattern[2] = {' ', '|'};
+        print_pattern(dimensions.fence_size, pattern, 2);
+    }
+    else
+    {
+        char pattern[2] = {'|', ' '};
+        print_pattern(dimensions.fence_size, pattern, 2);
+    }
 }
 
 void print_pattern(int count, char *pattern, int size)
@@ -364,12 +382,6 @@ void handle_error(int error_code)
 
 int read_fence_size(SHouse_dimensions *dimensions)
 {
-    // if (getchar() == EOF)
-    // {
-        // dimensions->fence_size = 0;
-        // return OK;
-    // } 
-    // TODO: fixme
     int ret_scan = scanf("%d", &dimensions->fence_size);
     if (ret_scan != 1)
         return BAD_INPUT;
@@ -379,12 +391,12 @@ int read_fence_size(SHouse_dimensions *dimensions)
 int validate_fence_size(SHouse_dimensions house_dims)
 {
     if (house_dims.fence_size == 0)
-        return OK;
+        return FENCE_SIZE_OUT_OF_BOUNDS;
     if (house_dims.fence_size > house_dims.height - 1)
         return FENCE_SIZE_OUT_OF_BOUNDS;
     if (house_dims.fence_size < 0)
         return FENCE_SIZE_OUT_OF_BOUNDS;
-    if (house_dims.fence_size % 2 != 0)
-        return FENCE_SIZE_OUT_OF_BOUNDS;
+    // if (house_dims.fence_size % 2 != 0)
+    // return FENCE_SIZE_OUT_OF_BOUNDS;
     return OK;
 }
