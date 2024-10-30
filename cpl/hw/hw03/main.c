@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define OK 0
 // --------------------- UTILS --------------------------------
@@ -91,16 +92,28 @@ char **prase_string_by_words(char *str, int word_count);
 char *get_next_word(int *from_index, char *str);
 int count_next_word_size(int from_index, char *str);
 void print_words(char **pWords, int word_count);
-void sort_words(char *words_array); // check qsort
+int compare_strings(const void *str1, const void *str2);
+SWords_occurences **count_word_occurences(char **words, int word_count, int *ret_unique_word_count);
+int get_unique_words_count(char **words, int word_count);
+SWords_occurences **get_unique_words(char **words, int word_count);
+void add_count(char *word, SWords_occurences **unique_words, int unique_words_count);
+void print_word_and_occurences(SWords_occurences **words, int count);
+
+SWords_occurences *create_object(char *word);
+
+void free_memory(void *obtained_string, char **words_array, int word_count, SWords_occurences **occurences, int unique_words_count);
 
 int main(void)
 {
     int str_size = read_string_size() + 1; // account for '\0'
-    char *buffer = read_string(str_size);
-    int word_count = count_words(buffer);
-    char **words_buffer = prase_string_by_words(buffer, word_count);
-    print_words(words_buffer, word_count);
-    free(buffer);
+    char *obtained_string = read_string(str_size);
+    int word_count = count_words(obtained_string);
+    char **words_array = prase_string_by_words(obtained_string, word_count);
+    qsort(words_array, word_count, sizeof(char *), compare_strings);
+    int unique_words_count;
+    SWords_occurences **occurences = count_word_occurences(words_array, word_count, &unique_words_count);
+    print_word_and_occurences(occurences, unique_words_count);
+    free_memory(obtained_string, words_array, word_count, occurences, unique_words_count);
     return OK;
 }
 
@@ -118,10 +131,11 @@ char *read_string(int string_size)
     char *buffer = malloc(buffer_size);
     for (int i = 0; i < string_size - 1; ++i)
     {
-        char c = (char)getchar();
+        char c;
+        scanf("%c", &c);
         buffer[i] = c;
     }
-    buffer[++string_size] = '\0';
+    buffer[string_size] = '\0';
     return buffer;
 }
 int count_words(char *str)
@@ -146,19 +160,20 @@ char **prase_string_by_words(char *str, int word_count)
     {
         char *word = get_next_word(&start_from, str);
         ++start_from;
-        *(words + i * sizeof(char *)) = word;
+        words[i] = word;
     }
     return words;
 }
 char *get_next_word(int *from_index, char *str)
 {
-    int next_word_size = count_next_word_size(*from_index, str);
+    int next_word_size = count_next_word_size(*from_index, str) + 1;
     char *word = malloc(next_word_size * sizeof(char));
-    for (int i = 0; i < next_word_size; ++i)
+    for (int i = 0; i < next_word_size - 1; ++i)
     {
         word[i] = str[*from_index];
         ++*from_index;
     }
+    word[next_word_size] = '\0';
     return word;
 }
 int count_next_word_size(int from_index, char *str)
@@ -177,6 +192,102 @@ void print_words(char **pWords, int word_count)
 {
     for (int word_index = 0; word_index < word_count; ++word_index)
     {
-        printf("%s", *(pWords + sizeof(char *)));
+        printf("\n%s\n", pWords[word_index]);
     }
+}
+int compare_strings(const void *obj1, const void *obj2)
+{
+    return strcmp(*(const char **)obj1, *(const char **)obj2);
+}
+SWords_occurences **count_word_occurences(char **words, int word_count, int *ret_unique_word_count)
+{
+    int unique_words_count = get_unique_words_count(words, word_count);
+    SWords_occurences **unique_words = get_unique_words(words, word_count);
+    for (int i = 0; i < word_count; ++i)
+    {
+        char *word1 = words[i];
+        add_count(word1, unique_words, unique_words_count);
+    }
+    *ret_unique_word_count = unique_words_count;
+    return unique_words;
+}
+
+int get_unique_words_count(char **words, int word_count)
+{
+    int unique_word_count = 0;
+    for (int i = 0; i < word_count - 1; ++i)
+    {
+        char *word1 = words[i];
+        char *word2 = words[i + 1];
+        if (strcmp(word1, word2) != 0)
+        {
+            ++unique_word_count;
+        }
+    }
+    ++unique_word_count; // to account for last word;
+    return unique_word_count;
+}
+SWords_occurences **get_unique_words(char **words, int word_count)
+{
+    int unique_word_count = get_unique_words_count(words, word_count);
+    SWords_occurences **unique_words = (SWords_occurences **)malloc(unique_word_count * sizeof(SWords_occurences *));
+    int current_unique_word_index = 0;
+    for (int i = 0; i < word_count - 1; ++i)
+    {
+        char *word1 = words[i];
+        char *word2 = words[i + 1];
+        if (strcmp(word1, word2) != 0)
+        {
+            unique_words[current_unique_word_index] = create_object(word1);
+            ++current_unique_word_index;
+        }
+    }
+    unique_words[current_unique_word_index] = create_object(words[word_count - 1]); // create entry for last word
+    return unique_words;
+}
+
+void add_count(char *word, SWords_occurences **unique_words, int unique_words_count)
+{
+    for (int i = 0; i < unique_words_count; ++i)
+    {
+        SWords_occurences *pUnique_word = unique_words[i];
+        if (strcmp(pUnique_word->word, word) == 0)
+        {
+            ++pUnique_word->count;
+            return;
+        }
+    }
+}
+void print_word_and_occurences(SWords_occurences **words, int count)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        SWords_occurences word = *(words[i]);
+        printf("%i %s\n", word.count, word.word);
+    }
+}
+SWords_occurences *create_object(char *word)
+{
+    char *unique_word = malloc((strlen(word) + 1) * sizeof(char));
+    strcpy(unique_word, word);
+    SWords_occurences *word_occurrence = malloc(sizeof(SWords_occurences));
+    *word_occurrence = (SWords_occurences){.word = unique_word, .count = 0};
+    return word_occurrence;
+}
+
+void free_memory(void *obtained_string, char **words_array, int word_count, SWords_occurences **occurences, int unique_words_count)
+{
+    free(obtained_string);
+    for (int i = 0; i < word_count; ++i)
+    {
+        free(words_array[i]);
+    }
+    free(words_array);
+
+    for (int i = 0; i < unique_words_count; ++i)
+    {
+        free(occurences[i]->word); // Free the word string
+        free(occurences[i]);       // Free the SWords_occurences
+    }
+    free(occurences);
 }

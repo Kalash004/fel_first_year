@@ -16,7 +16,7 @@ int is_char_in_array(char c, int arr_size, char arr[])
     }
     return FALSE;
 }
-void shift_array_left(int shift_index, int arr_size, void *arr)
+void shift_array_left(int shift_index, int arr_size, )
 {
     int used = 0;
     for (int i = 0; i < arr_size; ++i)
