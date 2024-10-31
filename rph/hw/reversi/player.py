@@ -10,8 +10,8 @@ class GameState:
         
     def get_locations_of_color(self, color):
         to_return = []
-        rows_count = len(self.board) - 1
-        cols_count = len(self.board[0]) - 1
+        rows_count = len(self.board)
+        cols_count = len(self.board[0])
         for row in range(0,rows_count):
             for col in range(0, cols_count):
                 if (color == self.board[row][col]):
@@ -22,6 +22,7 @@ class GameState:
         all_playable_cells = []
         for my_cell in self.my_locations:
             all_playable_cells.append(self._find_playable_cells_for_this_cell(my_cell[0], my_cell[1]))
+        all_playable_cells = [x for x in all_playable_cells if x is not None]
         return all_playable_cells
     
     def _find_playable_cells_for_this_cell(self,start_row, start_col):
@@ -37,12 +38,12 @@ class GameState:
         ]
         playable_cells_for_n_cell = [x for x in playable_cells_for_n_cell if x is not None] # remove Nones
         if len(playable_cells_for_n_cell) == 0:
-            return 
+            return None
         return playable_cells_for_n_cell
     
     def _marsh(self, start_row, start_col, step, data, looking_for, between):
         col, row = start_col, start_row
-        max_height = len(data) - 1
+        max_height = len(data)- 1
         max_width = len(data[start_row]) - 1
         between_count = 0
         while (col < max_width and row < max_height and col >= 0 and row >= 0):
@@ -61,6 +62,9 @@ class GameState:
                 
             
 class MyPlayer:
+    """
+        Player plays, game games
+    """
     def __init__(self, my_color, opponent_color):
         self.my_color = my_color
         self.opponent_color = opponent_color
@@ -75,7 +79,8 @@ class MyPlayer:
             return (x, y)            
         except Exception as e: 
             # TODO
-            print(e)
+            # print(e)
+            raise e
             return 0
         
         
@@ -91,7 +96,28 @@ if __name__ == "__main__":
         [-1, -1, -1, -1,-1, -1, -1, -1],
         [-1, -1, -1, -1,-1, -1, -1, -1],
     ]
+    game2 = [
+        [-1,-1,-1,-1, 1,-1,-1, 0],
+	    [-1,-1,-1, 1, 1, 1, 0,-1],
+	    [-1,-1,	1,-1, 1, 0, 1,-1],
+	    [-1,-1,-1, 1, 0, 1, 0, 0],
+	    [-1,-1, 1, 0, 1, 0, 0, 0],
+	    [-1, 1, 0, 0, 0, 0, 0,-1],
+	    [-1,-1,-1, 1,-1,-1,-1, 0],
+	    [-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+    game3 = [
+        [ 0, 0,	0, 0, 1, 1,	1, 0],
+        [ 0, 0,	0, 1, 1, 0,	0, 0],
+        [ 0, 1,	0, 0, 1, 1,	0, 0],
+        [ 0, 1,	1, 0, 1, 1,	0, 0],
+        [ 0, 1,	1, 1, 0, 1,	0, 1],
+        [ 0, 1,	1, 1, 1, 1,	1, 1],
+        [ 0, 1,	1, 1, 1, 1, 0,-1],
+        [ 0, 0,	0, 0, 0, 0,	0,-1],
+    ]
+    # problem 7:5   
     player = MyPlayer(0,1)
-    move = player.select_move(game)
+    move = player.select_move(game3)
     print(move)
     
