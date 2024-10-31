@@ -46,7 +46,7 @@ class GameState:
         max_height = len(data)- 1
         max_width = len(data[start_row]) - 1
         between_count = 0
-        while (col < max_width and row < max_height and col >= 0 and row >= 0):
+        while (col + step[1] <= max_width and row + step[0] <= max_height and col + step[1] >= 0 and row + step[0] >= 0):
             col += step[1]
             row += step[0]
             test_subject = data[row][col]
@@ -56,7 +56,7 @@ class GameState:
             if (test_subject == looking_for and between_count > 0):
                 return (row, col)
             return None
-            
+        return None
     
         
                 
@@ -72,7 +72,9 @@ class MyPlayer:
         
     def select_move(self, board): #-> tuple('int row','int column') 
         try:
-            game_state = GameState(board, self.my_color, self.opponent_color)
+            game_state = GameState(board, self.my_color, self.opponent_color) # fix
+            if len(game_state.playable_cells) == 0:
+                return None
             cell = game_state.playable_cells[0][0]
             x = cell[0]
             y = cell[1]
@@ -116,8 +118,37 @@ if __name__ == "__main__":
         [ 0, 1,	1, 1, 1, 1, 0,-1],
         [ 0, 0,	0, 0, 0, 0,	0,-1],
     ]
-    # problem 7:5   
-    player = MyPlayer(0,1)
-    move = player.select_move(game3)
+    game4 = [
+        [ 0, 0,	0, 0, 0, 0,	0, 0],
+        [ 0, 0,	0, 0, 0, 0,	0, 0],
+        [ 0, 0,	0, 0, 0, 0,	0, 0],
+        [ 0, 0,	0, 0, 0, 0,	0, 0],
+        [ 0, 0,	0, 0, 0, 0,	0, 0],
+        [ 0, 0,	0, 0, 0, 0,	0, 0],
+        [ 0, 0,	0, 0, 0, 0,	0, 0],
+        [ 0, 0,	0, 0, 0, 0,	0, 0]
+    ]
+    game5 = [
+        [-1, 1, 1, 1, 1, 1, 0, 0],
+        [ 0, 1,	0, 0, 0, 0, 0, 0],
+        [ 1, 1,	1, 1, 1, 1, 0, 0],
+        [ 1, 1,	0, 1, 0, 1, 0, 0],
+        [ 1, 1,	0, 0, 1, 0, 0, 0],
+        [ 0, 0,	0, 1, 1, 1, 0, 0],
+        [ 0, 0,	1, 1, 1, 0, 1, 0],
+        [ 0, 1,	1, 1, 1, 1, 1, 1],
+    ]
+    game6 = [
+        [-1, 1, 1, 1, 1, 1, 0, 0],
+	    [-1, 1, 0, 0, 0, 0, 0, 0],
+	    [-1, 1, 0, 0, 0, 1, 0, 0],
+        [-1, 1, 0, 1, 0, 1, 0, 0],
+        [ 1, 1, 0, 1, 1, 0, 0, 0],
+        [-1, 1, 0, 1, 1, 1, 0, 0],
+        [ 1, 1, 1, 1, 1, 0, 1, 0],
+        [-1,-1, 0, 1, 1, 1, 1, 1] # (7, 3)
+    ]
+    player = MyPlayer(1,0)
+    move = player.select_move(game6)
     print(move)
     
