@@ -1,45 +1,30 @@
 primes = [2]
 
-def generate_probable_primes(my_range):
-    probable_primes = []
-    for i in range(4, my_range):
-        print(f"Running probable_generation {i} / {my_range}")
-        if is_probable_prime(i):
-            probable_primes.append(i)
-    return probable_primes
-  
-def check_if_probable_primes_are_primes(probable_primes):
-    count = 0
-    size = len(probable_primes)
-    for i in probable_primes:
-        count += 1
-        print(f"Checking if probable is prime {count}/{size}")
-        if is_prime(i):
-            primes.append(i)
-          
-def is_prime(num):
-    for i in primes:
-        if not (num % i):
-            return False
-    return True
+def sieve_of_eratosthenes(n):
+    # Step 1: Create a list of booleans, initially set to True
+    is_prime = [True] * (n + 1)
+    p = 2
     
-def is_probable_prime(num):
-    import random
-    if num <= 3:
-        raise Exception("Bad num")
-    for i in range(1, 2):
-        # test for composite
-        a = random.randint(2, num - 2)
-        if pow(a, num - 1) % num != 1:
-            return False
-    return True
+    # Step 2: Set 0 and 1 to not prime
+    is_prime[0] = is_prime[1] = False
+    
+    # Step 3: Iterate over each number up to the square root of n
+    while p * p <= n:
+        # If p is prime, mark all its multiples as not prime
+        if is_prime[p]:
+            for i in range(p * p, n + 1, p):
+                is_prime[i] = False
+        p += 1
+    
+    # Step 4: Collect all numbers that are still marked as prime
+    primes = [p for p in range(n + 1) if is_prime[p]]
+    return primes
+
 
 def main():
     import sys
     range = pow(10,6) + 1
-    # range = 15
-    probable_primes = generate_probable_primes(range)
-    check_if_probable_primes_are_primes(probable_primes)
+    primes = sieve_of_eratosthenes(range)
     orig_stdout = sys.stdout
     with open('primes.txt', 'w') as f:
         sys.stdout = f
