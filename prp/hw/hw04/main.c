@@ -53,17 +53,22 @@ int shift_array_left_to_index_from_index(int to_index, int from_index, Array *ar
     void *first_cell = arr->first_cell;
     int arr_last_index = arr->array_length - 1;
     int element_size = arr->element_size;
-    for (int i = from_index; i < arr_last_index; ++i)
+    int j = from_index;
+    do
     {
-        memcpy((char *)first_cell + element_size * used, (char *)first_cell + element_size * i, element_size); // first_cell[used] = first_cell[i]
+        memcpy((char *)first_cell + element_size * used, (char *)first_cell + element_size * j, element_size); // first_cell[used] = first_cell[i]
         ++used;
-    }
-    arr->array_length = used;
+        ++j;
+    } while (j < arr_last_index);
+
+    arr->array_length = arr->array_length - (from_index - to_index);
 
     return 0;
 }
 
 // --------------------- UTILS --------------------------------
+
+void wrapper_eratosthenes_sieve(Array *primes_arr, int amount_to_generate);
 
 void generate_numbers(Array *arr);
 
@@ -71,7 +76,7 @@ int get_next_num(int old_num);
 
 void print_int_range_arr(int from, int to, Array arr);
 
-void eratosthenes_sieve(Array *arr);
+void eratosthenes_sieve(Array *generated_nums, Array *primes);
 
 void remove_divisible_by(int num, Array *arr);
 
@@ -87,19 +92,25 @@ void remove_divisible_by(int num, Array *arr);
 
 int main(void)
 {
-    int all_numbers[1000001];
-    Array arr = {.first_cell = &all_numbers, .array_length = 1000001, .element_size = sizeof(int)};
-    generate_numbers(&arr);
-    print_int_range_arr(0, 10, arr);
-    print_int_range_arr(999999, 1000001, arr);
-    eratosthenes_sieve(&arr);
+    int prime_numbers_arr_size = 5;
+    int prime_numbers[prime_numbers_arr_size];
+    Array primes = {.first_cell = &prime_numbers, .array_length = prime_numbers_arr_size, .element_size = sizeof(int)};
+    wrapper_eratosthenes_sieve(&primes, 10);
+    print_int_range_arr(0, primes.array_length, primes);
+}
+
+void wrapper_eratosthenes_sieve(Array *primes_arr, int amount_to_generate) {
+    int generated[amount_to_generate];
+    Array generated_numbers = {.array_length = amount_to_generate, .element_size = sizeof(int), .first_cell = generated};
+    generate_numbers(&generated_numbers);
+    eratosthenes_sieve(&generated_numbers, primes_arr);
 }
 
 void generate_numbers(Array *arr)
 {
     int num = 1;
     int *first_cell = (int *)arr->first_cell;
-    for (int i = 0; i <= arr->array_length; ++i)
+    for (int i = 0; i < arr->array_length; ++i)
     {
         num = get_next_num(num);
         first_cell[i] = num;
@@ -123,21 +134,23 @@ void print_int_range_arr(int from, int to, Array arr)
     }
 }
 
-void eratosthenes_sieve(Array *arr)
+void eratosthenes_sieve(Array *generated_nums, Array *primes)
 {
-    if (arr->array_length - 1 < 1)
+    if (generated_nums->array_length - 1 < 1)
         return;                           // TODO: Error code
-    if (((int *)arr->first_cell)[0] != 2) // must be 2
+    if (((int *)generated_nums->first_cell)[0] != 2) // must be 2
         return;                           // TODO: Error code
 
-    int known_primes[arr->array_length - 1];
-    int *first_cell = arr->first_cell;
+    int *known_primes = (int *)primes->first_cell;
+    int *first_cell = generated_nums->first_cell;
     known_primes[0] = first_cell[0];
-    for (int i = 0; i < arr->array_length - 1; ++i)
+    int i = 0;
+    for (; i < generated_nums->array_length; ++i)
     {
-        remove_divisible_by(known_primes[i], arr);
-        known_primes[i + 1] = ((int *)arr->first_cell)[0];
+        remove_divisible_by(known_primes[i], generated_nums);
+        known_primes[i + 1] = ((int *)generated_nums->first_cell)[0];
     }
+    primes->array_length = i + 1;
 }
 
 // [2, 3, 5, 7]
@@ -171,13 +184,14 @@ void remove_divisible_by(int num, Array *arr)
         {
             if (i == arr->array_length - 1)
             {
-                --arr->array_length;
+                arr->array_length -= 1;
+                --i;
                 continue;
             }
             shift_array_left_to_index_from_index(i, i + 1, arr);
         }
         --i;
-    } while (0 < i);
+    } while (0 <= i);
 }
 
 // void find_remove_zeroes(Array *arr)
