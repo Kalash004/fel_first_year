@@ -1,0 +1,4 @@
+gcc -c module1.c -o module1.o
+gcc -c module2.c -o module2.o
+gcc -c main.c -o main.o
+gcc main.o module2.o module1.o -lm -o main

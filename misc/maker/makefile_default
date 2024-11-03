@@ -1,0 +1,11 @@
+a.out : main.o module2.o module1.o
+    gcc main.o module2.o module1.o -lm -o a.out
+
+main.o : main.c
+    gcc -c main.c -o main.o
+
+module2.o : module2.c
+    gcc -c module2.c
+
+module1.o : module1.c
+    gcc -c module1.c
