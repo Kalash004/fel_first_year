@@ -1,7 +1,24 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 // ----------------- Error handling -------------------------------------
+#ifndef STDIOH
+#define STDIOH
+#include <stdio.h>
+#endif
+
+#ifndef STDLIBH
+#define STDLIBH
+#include <stdlib.h>
+#endif
+
+#ifndef STRINGH
+#define STRINGH
+#include <string.h>
+#endif
+
+#ifndef TRUE
+#define TRUE 1
+#define FALSE 0
+#endif
+
 typedef struct
 {
     int code;
