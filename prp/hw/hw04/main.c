@@ -297,7 +297,7 @@ void get_primes(Array *temp, Array *primes)
     int used = 0;
     for (int i = 0; i < temp->array_length; ++i)
     {
-        if (temp_arr_cells[i])
+        if (temp_arr_cells[i]) // something bad
         {
             primes_arr_cells[used] = i;
             ++used;
@@ -330,8 +330,9 @@ void get_number_factor(Number_factors *destination, Array *primes, long long int
 
 Array *get_factors(Array *primes, long long int target)
 {
-    int size = 0;
-    int *first_cell = malloc(sizeof(int) * 1);
+    int size = 100000;
+    int real_size = 0;
+    int *first_cell = malloc(sizeof(int) * size);
 
     int *arr_first_cell = (int *)primes->first_cell;
     int max_factor_id = get_max_factor_id(primes, target);
@@ -348,10 +349,14 @@ Array *get_factors(Array *primes, long long int target)
         int factor = arr_first_cell[i];
         if (target % factor == 0)
         {
-            ++size;
-            first_cell = realloc(first_cell, sizeof(int) * size);
+            ++real_size;
+            if (real_size > size - 1)
+            {
+                first_cell = realloc(first_cell, sizeof(int) * size * 2); // something bad
+                size *= 2;
+            }
             target = target / factor;
-            first_cell[size - 1] = factor;
+            first_cell[real_size - 1] = factor;
             continue;
         }
         ++i;
@@ -361,7 +366,7 @@ Array *get_factors(Array *primes, long long int target)
     Array *ret_object = (Array *)malloc(sizeof(Array));
     ret_object->first_cell = first_cell;
     ret_object->element_size = sizeof(int);
-    ret_object->array_length = size;
+    ret_object->array_length = real_size;
     return ret_object;
 }
 
@@ -383,6 +388,7 @@ int get_max_factor_id(Array *primes, long long int target)
 
 void free_it(Number_factors *pClean_this)
 {
+    free(pClean_this->factors->first_cell);
     free(pClean_this->factors);
 }
 
@@ -393,6 +399,8 @@ void print_number_factors(Number_factors num_fac)
     for (int i = 0; i < num_fac.factors->array_length; ++i)
     {
         int current_factorial = first_cell[i];
+        if (current_factorial == 0)
+            break;
         printf("%i", current_factorial);
         int exponent_count = get_exponent_count(num_fac.factors, current_factorial, i);
         if (exponent_count > 1)
