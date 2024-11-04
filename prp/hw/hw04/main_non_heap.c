@@ -233,6 +233,7 @@ void do_cycle(Array *primes, int *stop_flag)
 
     printf("Prvociselny rozklad cisla %lli je:\n", input);
 
+    print_factors(primes, input);
     int max_factor_id = get_max_factor_id(primes, input);
     int exponent_count = 0;
     int last_factor = 0;
@@ -249,7 +250,7 @@ void do_cycle(Array *primes, int *stop_flag)
         }
 
         printf("%i", factor);
-        
+
         if (factor == 0)
             break; // End of printing
         
