@@ -102,11 +102,13 @@ typedef struct
 typedef enum
 {
     UNKNOWN_ERROR_CODE,
+    MALLOC_ERROR_ENCOUNTER,
     BAD_INPUT,
     END
 } EError_codes;
 SError errors[] = {
     {.code = -1, .message = "Error: Unknown error code: %d"},
+    {.code = -333, .message = "Error: Heap allocation error"},
     {.code = 100, .message = "Error: Chybny vstup!"}};
 void handle_fatal_error(int code);
 void handle_non_fatal_error(int code);
@@ -155,35 +157,41 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 // ----------------- Error handling -------------------------------------
 
 #define BAD_INPUT_ERROR 100
+#define MALLOC_ERROR -333
+
 typedef struct
 {
     long long int number;
     Array *factors;
 } Number_factors;
 
-void set_everything_to_true(int *t, int count, int start_from);
-
 void do_cycle(Array *primes, int *stop_flag);
-
-void eratosthenes_sieve(int *temp_mass, int count);
 
 void prime_generator(Array *primes, int count);
 
-void get_primes(int *temp, int count, Array *primes);
+void set_everything_to_true(Array *arr, int start_from);
 
 void print_int_range_arr(int from, int to, Array arr);
+
+void eratosthenes_sieve(Array *primes, int count);
+
+void get_primes(Array *temp, Array *primes);
+
+int *get_inputs(int *input_count);
 
 int get_next_input(long long int *p_current_num);
 
 void get_number_factor(Number_factors *destination, Array *primes, long long int current_num);
 
+Array *get_factors(Array *primes, long long int current_num);
+
 int get_max_factor_id(Array *primes, long long int current_num);
 
+void free_it(Number_factors *pClean_this);
+
+void print_number_factors(Number_factors num_fac);
+
 int get_exponent_count(Array *arr, int exponent, int start_from);
-
-int get_next_factor(Array *primes, long long int *target, int *loop);
-
-void print_factors(Array *primes, long long int input);
 
 int main(void)
 {
@@ -228,22 +236,27 @@ void do_cycle(Array *primes, int *stop_flag)
         return;
     }
 
-    print_factors(primes, input);
+    Number_factors num_fact;
+    get_number_factor(&num_fact, primes, input);
+    print_number_factors(num_fact);
+    free_it(&num_fact);
 }
 
 void prime_generator(Array *primes, int count)
 {
     int temp_mass[count];
-    set_everything_to_true(temp_mass, count, 0);
-    eratosthenes_sieve(temp_mass, count);
-    get_primes(temp_mass, count, primes);
+    Array temp = {.array_length = count, .element_size = sizeof(int), .first_cell = temp_mass};
+    set_everything_to_true(&temp, 0);
+    eratosthenes_sieve(&temp, 1000000);
+    get_primes(&temp, primes);
 }
 
-void set_everything_to_true(int *t, int count, int start_from)
+void set_everything_to_true(Array *arr, int start_from)
 {
-    for (int i = start_from; i < count; ++i)
+    int *first_cell = arr->first_cell;
+    for (int i = start_from; i < arr->array_length; ++i)
     {
-        t[i] = TRUE;
+        first_cell[i] = TRUE;
     }
 }
 
@@ -259,30 +272,32 @@ void print_int_range_arr(int from, int to, Array arr)
     }
 }
 
-void eratosthenes_sieve(int *temp_mass, int count)
+void eratosthenes_sieve(Array *primes, int count)
 {
-    temp_mass[0] = temp_mass[1] = FALSE;
+    int *known_primes = (int *)primes->first_cell;
+    known_primes[0] = known_primes[1] = FALSE;
     int prime = 2;
     while (prime * prime <= count)
     {
-        if (temp_mass[prime])
+        if (known_primes[prime])
         {
             for (int i = prime * prime; i < count + 1; i += prime)
             {
-                temp_mass[i] = FALSE;
+                known_primes[i] = FALSE;
             }
         }
         ++prime;
     }
 }
 
-void get_primes(int *temp, int count, Array *primes)
+void get_primes(Array *temp, Array *primes)
 {
+    int *temp_arr_cells = (int *)temp->first_cell;
     int *primes_arr_cells = (int *)primes->first_cell;
     int used = 0;
-    for (int i = 0; i < count; ++i)
+    for (int i = 0; i < temp->array_length; ++i)
     {
-        if (temp[i])
+        if (temp_arr_cells[i]) // something bad
         {
             primes_arr_cells[used] = i;
             ++used;
@@ -306,23 +321,53 @@ int get_next_input(long long int *p_current_num)
     return 0;
 }
 
-int get_next_factor(Array *primes, long long int *target, int *loop)
+void get_number_factor(Number_factors *destination, Array *primes, long long int target)
 {
+    destination->number = target;
+    Array *factors = get_factors(primes, target);
+    destination->factors = factors;
+}
+
+Array *get_factors(Array *primes, long long int target)
+{
+    int size = 100000;
+    int real_size = 0;
+    int *first_cell = malloc(sizeof(int) * size);
+
     int *arr_first_cell = (int *)primes->first_cell;
+    int max_factor_id = get_max_factor_id(primes, target);
+    int i = 0;
 
-    if (*loop < 0)
-        handle_fatal_error(555); // Shouldnt happen
-
-    int i = *loop;
-
-    int factor = arr_first_cell[i];
-    if (*target % factor == 0)
+    if (max_factor_id == -1)
     {
-        *target = *target / factor;
-        return factor;
+        free(first_cell);
+        handle_fatal_error(555); // random code cos i am lazy - shouldnt happen
     }
-    ++*loop;
-    return -1;
+
+    do
+    {
+        int factor = arr_first_cell[i];
+        if (target % factor == 0)
+        {
+            ++real_size;
+            if (real_size > size - 1)
+            {
+                first_cell = realloc(first_cell, sizeof(int) * size * 2); // something bad
+                size *= 2;
+            }
+            target = target / factor;
+            first_cell[real_size - 1] = factor;
+            continue;
+        }
+        ++i;
+
+    } while (i < max_factor_id);
+
+    Array *ret_object = (Array *)malloc(sizeof(Array));
+    ret_object->first_cell = first_cell;
+    ret_object->element_size = sizeof(int);
+    ret_object->array_length = real_size;
+    return ret_object;
 }
 
 int get_max_factor_id(Array *primes, long long int target)
@@ -341,51 +386,31 @@ int get_max_factor_id(Array *primes, long long int target)
     return i;
 }
 
-void print_factors(Array *primes, long long int input)
+void free_it(Number_factors *pClean_this)
 {
-    printf("Prvociselny rozklad cisla %lli je:\n", input);
-    int max_factor_id = get_max_factor_id(primes, input);
-    int loop = 0;
-    int exponent_count = 0;
-    int last_factor = 0;
-    int factor_id = 0;
-    long long int target = input;
-    do
+    free(pClean_this->factors->first_cell);
+    free(pClean_this->factors);
+}
+
+void print_number_factors(Number_factors num_fac)
+{
+    printf("Prvociselny rozklad cisla %lli je:\n", num_fac.number);
+    int *first_cell = (int *)num_fac.factors->first_cell;
+    for (int i = 0; i < num_fac.factors->array_length; ++i)
     {
-        if (factor_id == max_factor_id)
-            break; // End of printing
-
-        int factor = get_next_factor(primes, &target, &factor_id);
-
-        if (factor == -1)
+        int current_factorial = first_cell[i];
+        if (current_factorial == 0)
+            break;
+        printf("%i", current_factorial);
+        int exponent_count = get_exponent_count(num_fac.factors, current_factorial, i);
+        if (exponent_count > 1)
         {
-            continue;
+            printf("^%i", exponent_count);
+            i += exponent_count - 1;
         }
-
-        if (factor == 0)
-            break; // End of printing
-
-        if (last_factor == factor)
-        {
-            ++exponent_count;
-            continue;
-        }
-        if (exponent_count > 0 && factor != last_factor)
-        {
-            printf("^%i", exponent_count + 1);
-            exponent_count = 0;
-        }
-
-        if (loop > 0 && factor_id < max_factor_id && factor != last_factor)
+        if (i < num_fac.factors->array_length - 1)
             printf(" x ");
-
-        printf("%i", factor);
-
-        last_factor = factor;
-        ++loop;
-    } while (factor_id < max_factor_id);
-    if (exponent_count > 0)
-        printf("^%i", exponent_count + 1);
+    }
     printf("\n");
 }
 
