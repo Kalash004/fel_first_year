@@ -22,8 +22,7 @@ int main(int argc, char *argv[])
     get_number_string(&test);
     for (int i = 0; i < 4; ++i)
     {
-        printf("%i", test.nums[i]);
-        fflush(stdout);
+        printf("%i\n", test.nums[i]);
     }
 }
 
@@ -45,10 +44,13 @@ int get_number_string(Lines_nums *__dest)
     get_numbers(number_file, numbers, numbers_count);
 
     fclose(number_file);
-    fclose(order_file);
 
     __dest->nums = numbers;
     __dest->pLines = NULL;
+
+    int char_count = get_char_count_in_line(order_file);
+    printf("%i/n", char_count);
+    fclose(order_file);
 }
 
 void get_strings(FILE *f)
