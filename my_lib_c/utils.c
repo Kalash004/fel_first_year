@@ -39,6 +39,8 @@ int is_char_in_array(char c, int arr_size, char arr[])
     }
     return FALSE;
 }
+void shift_array_left(int shift_index, Array *arr);
+
 void shift_array_left(int shift_index, Array *arr)
 {
     int used = 0;
@@ -55,5 +57,13 @@ void shift_array_left(int shift_index, Array *arr)
         ++used;
     }
     arr->array_length = used + 1;
+}
+
+int get_min(int num1, int num2) {
+
+int get_min(int num1, int num2) {
+    if (num1 > num2)
+        return num1;
+    return num2;
 }
 // --------------------- UTILS --------------------------------
