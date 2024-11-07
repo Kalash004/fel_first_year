@@ -1,3 +1,11 @@
+// --------------------- Main program macros ------------------
+#include <stdio.h>
+#include <stdbool.h>
+
+#define BAD_OPPERATION_CODE 2
+#define BAD_OPPERAND_CODE 3
+
+
 // --------------------- UTILS --------------------------------
 #ifndef STDIOH
 #define STDIOH
@@ -15,10 +23,7 @@
 #endif
 
 #ifndef bool
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif
+#include <stdbool.h>
 #endif
 
 typedef struct
@@ -28,16 +33,16 @@ typedef struct
     int element_size;
 } Array;
 
-int is_char_in_array(char c, int arr_size, char arr[]);
+bool is_char_in_array(char c, int arr_size, char arr[]);
 
-int is_char_in_array(char c, int arr_size, char arr[])
+bool is_char_in_array(char c, int arr_size, char arr[])
 {
     for (int i = 0; i < arr_size; ++i)
     {
         if (c == arr[i])
-            return TRUE;
+            return true;
     }
-    return FALSE;
+    return false;
 }
 void shift_array_left(int shift_index, Array *arr)
 {
@@ -55,6 +60,12 @@ void shift_array_left(int shift_index, Array *arr)
         ++used;
     }
     arr->array_length = used + 1;
+}
+
+int get_min(int num1, int num2) {
+    if (num1 > num2)
+        return num1;
+    return num2;
 }
 // --------------------- UTILS --------------------------------
 
@@ -74,11 +85,9 @@ void shift_array_left(int shift_index, Array *arr)
 #define STRINGH
 #include <string.h>
 #endif
+
 #ifndef bool
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif
+#include <stdbool.h>
 #endif
 
 typedef struct
@@ -143,11 +152,6 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 
 // ----------------- Main Program ---------------------------------------
 
-#include <stdio.h>
-#include <stdbool.h>
-
-#define BAD_OPPERATION_CODE 2
-#define BAD_OPPERAND_CODE 3
 
 
 typedef struct{
@@ -170,15 +174,22 @@ int main()
     read_number_into_struct(&num1);
     // TEST: print number 1;
     print_my_large_number(num1);
+
     // Read opperation
     char operation = get_operation();
-    // Get number length
-    // Make array with length ^
-    // Read number into array
-    // Save to struct
+
+    int num1_length = get_number_length();
+    char num1_mass[num1_length];
+    MyLargeNumber num2 = {.size = num1_length, .num_first_cell = num1_mass, .is_negative = false};
+    read_number_into_struct(&num1);
+    print_my_large_number(num1);
+
     // Do math <- heap alloc
+    MyLargeNumber *answer = do_math(num1, num2, operation);
     // Print result
+    print_my_large_number(*answer);
     // Free memory
+    free_all(answer);
 }
 
 int get_number_length()
@@ -236,9 +247,54 @@ char get_operation()
     return operation;
 }
 
-
 void print_my_large_number(MyLargeNumber number) {
     for (int i = 0; i < number.size; ++i) {
         fprintf(stdout, "%i",number.num_first_cell[i]);
     }
 }
+
+MyLargeNumber *do_math(MyLargeNumber num1, MyLargeNumber num2, char operation) {
+    MyLargeNumber *__answer;
+    switch (operation)
+    {
+    case '+':
+        __answer = do_sum(num1, num2);
+        break;
+    case '-':
+        __answer = do_substraction(num1, num2);
+        break;
+    case '*':
+        __answer = do_multiplication(num1, num2);
+        break;
+    case '/':
+        __answer = do_division(num1, num2);
+        break;
+    default:
+        // TODO: Handle exception 
+        break;
+    }
+}
+
+MyLargeNumber *do_sum(MyLargeNumber num1, MyLargeNumber num2){
+    int _new_digit_possible_size = get_max(num1.size, num2.size) + 1;
+    int *_new_digits = malloc(sizeof(int) * _new_digit_possible_size);
+    int _index_of_current_new_digit = 0;
+
+    int smallest_size = get_min(num1.size, num1.size);
+    bool is_overflow = false;
+    for (int i = smallest_size; i > 0; --i){ // TODO: continue here
+        char new_digit;
+        if (is_overflow) { // get rid of overflow
+            new_digit = 1;
+            is_overflow = false;
+        }
+        char new_digit = num1.num_first_cell[i] + num2.num_first_cell[i];
+        if (new_digit > 9) {
+            is_overflow = true;
+            new_digit -= 10;
+        }
+        _new_digits[_index_of_current_new_digit] = new_digit;
+    }
+    for (int i = _index_of_current_new_digit; i <)
+}
+
