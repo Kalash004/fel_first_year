@@ -4,6 +4,7 @@
 
 #define BAD_OPERATION_CODE 2
 #define BAD_OPERAND_CODE 3
+#define MALLOC_ERR_CODE 4
 
 // --------------------- UTILS --------------------------------
 #ifndef STDIOH
@@ -163,7 +164,7 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 
 typedef struct
 {
-    char *num_first_cell; // since one number can be from 0 - 9
+    int *num_first_cell; // since one number can be from 0 - 9
     int size;             // size under 100;
     bool is_negative;
 } MyLargeNumber;
@@ -172,9 +173,9 @@ int get_number_length();
 
 int read_number_into_struct(MyLargeNumber *__dest);
 
-char read_digit();
+int read_digit();
 
-char char_to_num(char __source);
+int char_to_num(char __source);
 
 char get_operation();
 
@@ -184,7 +185,7 @@ MyLargeNumber *do_math(MyLargeNumber num1, MyLargeNumber num2, char operation);
 
 MyLargeNumber *do_sum(MyLargeNumber num1, MyLargeNumber num2);
 
-void get_new_digit(MyLargeNumber num1, MyLargeNumber num2, char *_new_digits, int distance_from_end, int _new_digit_possible_size, bool *is_overflow);
+void get_new_digit(MyLargeNumber num1, MyLargeNumber num2, int *_new_digits, int distance_from_end, int _new_digit_possible_size, bool *is_overflow);
 
 void check_set_overflow(char *digit, bool *is_overflow);
 
@@ -195,22 +196,20 @@ int main()
     // Get number length
     int num1_length = get_number_length();
     // Make array with length ^
-    char num1_mass[num1_length];
+    int num1_mass[num1_length];
     // Save to struct
     MyLargeNumber num1 = {.size = num1_length, .num_first_cell = num1_mass, .is_negative = false};
     // Read number into array
     read_number_into_struct(&num1);
     // TEST: print number 1;
-    print_my_large_number(num1);
 
     // Read opperation
     char operation = get_operation();
 
     int num2_length = get_number_length();
-    char num2_mass[num1_length];
+    int num2_mass[num1_length];
     MyLargeNumber num2 = {.size = num1_length, .num_first_cell = num1_mass, .is_negative = false};
     read_number_into_struct(&num1);
-    print_my_large_number(num1);
 
     // Do math <- heap alloc
     MyLargeNumber *answer = do_math(num1, num2, operation);
@@ -231,7 +230,7 @@ int read_number_into_struct(MyLargeNumber *__dest)
 {
     for (int i = 0; i < __dest->size; ++i)
     {
-        char digit = read_digit(__dest);
+        int digit = read_digit(__dest);
         if (digit == 11) // may lead to some errors ;-;
             __dest->is_negative = true;
 
@@ -239,30 +238,31 @@ int read_number_into_struct(MyLargeNumber *__dest)
     }
 }
 
-char read_digit()
+int read_digit()
 {
     char possible_num = fgetc(stdin);
     if (possible_num == '-')
         return 11; // means -
 
-    char result = char_to_num(possible_num);
+    int result = char_to_num(possible_num);
     if (result == -1)
         return BAD_OPERAND_CODE; // TODO: Handle exception if num is not a number
 
     return result;
 }
 
-char char_to_num(char __source)
+int char_to_num(char __source)
 {
     if (__source < '0' || __source > '9')
         return -1; // char not a number;
 
-    char num = __source - '0';
+    int num = __source - '0';
     return num;
 }
 
 char get_operation()
 {
+    scanf("\n");
     char operation;
     scanf("%c", &operation);
     if (!is_char_in_array(operation, 4, (char[]){'-', '+', '*', '/'})) // TODO: check if needs char[4]
@@ -310,7 +310,7 @@ MyLargeNumber *do_math(MyLargeNumber num1, MyLargeNumber num2, char operation)
 MyLargeNumber *do_sum(MyLargeNumber num1, MyLargeNumber num2)
 {
     int _new_digit_possible_size = get_max(num1.size, num2.size) + 1;
-    char *_new_digits = malloc(sizeof(char) * _new_digit_possible_size);
+    int *_new_digits = malloc(sizeof(int) * _new_digit_possible_size);
     int _index_of_current_new_digit = 0;
 
     int smallest_size = get_min(num1.size, num1.size);
@@ -321,12 +321,17 @@ MyLargeNumber *do_sum(MyLargeNumber num1, MyLargeNumber num2)
         get_new_digit(num1, num2, _new_digits, i, _new_digit_possible_size, &is_overflow);
         ++_index_of_current_new_digit;
     }
-    // reverse the new num
+    MyLargeNumber *answer = (MyLargeNumber *)malloc(1 * sizeof(MyLargeNumber));
+    if (answer == NULL) {
+        handle_fatal_error(MALLOC_ERR_CODE);
+    }
+    answer->num_first_cell = _new_digits;
+    return answer;
 }
 
-void get_new_digit(MyLargeNumber num1, MyLargeNumber num2, char *_new_digits, int distance_from_end, int _new_digit_possible_size, bool *is_overflow)
+void get_new_digit(MyLargeNumber num1, MyLargeNumber num2, int *_new_digits, int distance_from_end, int _new_digit_possible_size, bool *is_overflow)
 {
-    char new_digit;
+    char new_digit = 0;
     if (*is_overflow)
     {
         new_digit = 1;
@@ -335,21 +340,21 @@ void get_new_digit(MyLargeNumber num1, MyLargeNumber num2, char *_new_digits, in
     if (num1.size >= distance_from_end && num2.size >= distance_from_end)
     { // Both numbers have next digit
         new_digit = num1.num_first_cell[num1.size - distance_from_end] + num2.num_first_cell[num2.size - distance_from_end] + new_digit;
-        check_set_overflow(&new_digit, &is_overflow);
+        check_set_overflow(&new_digit, is_overflow);
         _new_digits[_new_digit_possible_size - distance_from_end] = new_digit;
         return;
     }
     if (num1.size >= distance_from_end)
     { // Number 1 has digit, number 2 doesnt
         new_digit = num1.num_first_cell[num1.size - distance_from_end] + new_digit;
-        check_set_overflow(&new_digit, &is_overflow);
+        check_set_overflow(&new_digit, is_overflow);
         _new_digits[_new_digit_possible_size - distance_from_end] = new_digit;
         return;
     }
     if (num2.size >= distance_from_end)
     { // Number 2 has digit, number 1 doenst
         new_digit = num2.num_first_cell[num2.size - distance_from_end] + new_digit;
-        check_set_overflow(&new_digit, &is_overflow);
+        check_set_overflow(&new_digit, is_overflow);
         _new_digits[_new_digit_possible_size - distance_from_end] = new_digit;
         return;
     }
