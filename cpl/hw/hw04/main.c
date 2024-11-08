@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#define BAD_OPPERATION_CODE 2
-#define BAD_OPPERAND_CODE 3
-
+#define BAD_OPERATION_CODE 2
+#define BAD_OPERAND_CODE 3
 
 // --------------------- UTILS --------------------------------
 #ifndef STDIOH
@@ -56,16 +55,28 @@ void shift_array_left(int shift_index, Array *arr)
         {
             continue;
         }
-        memcpy((char *)first_cell + element_size * used, (char *)first_cell + element_size * i, element_size); // 
+        memcpy((char *)first_cell + element_size * used, (char *)first_cell + element_size * i, element_size); //
         ++used;
     }
     arr->array_length = used + 1;
 }
 
-int get_min(int num1, int num2) {
+int get_max(int num1, int num2);
+
+int get_max(int num1, int num2)
+{
     if (num1 > num2)
         return num1;
     return num2;
+}
+
+int get_min(int num1, int num2);
+
+int get_min(int num1, int num2)
+{
+    if (num1 > num2)
+        return num2;
+    return num1;
 }
 // --------------------- UTILS --------------------------------
 
@@ -80,8 +91,7 @@ int get_min(int num1, int num2) {
 #include <stdlib.h>
 #endif
 
-
-#ifndef STRINGH 
+#ifndef STRINGH
 #define STRINGH
 #include <string.h>
 #endif
@@ -149,18 +159,36 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 }
 // ----------------- Error handling -------------------------------------
 
-
 // ----------------- Main Program ---------------------------------------
 
-
-
-typedef struct{
+typedef struct
+{
     char *num_first_cell; // since one number can be from 0 - 9
-    int size; // size under 100;
+    int size;             // size under 100;
     bool is_negative;
 } MyLargeNumber;
 
 int get_number_length();
+
+int read_number_into_struct(MyLargeNumber *__dest);
+
+char read_digit();
+
+char char_to_num(char __source);
+
+char get_operation();
+
+void print_my_large_number(MyLargeNumber number);
+
+MyLargeNumber *do_math(MyLargeNumber num1, MyLargeNumber num2, char operation);
+
+MyLargeNumber *do_sum(MyLargeNumber num1, MyLargeNumber num2);
+
+void get_new_digit(MyLargeNumber num1, MyLargeNumber num2, char *_new_digits, int distance_from_end, int _new_digit_possible_size, bool *is_overflow);
+
+void check_set_overflow(char *digit, bool *is_overflow);
+
+void free_all(MyLargeNumber *_target);
 
 int main()
 {
@@ -178,8 +206,8 @@ int main()
     // Read opperation
     char operation = get_operation();
 
-    int num1_length = get_number_length();
-    char num1_mass[num1_length];
+    int num2_length = get_number_length();
+    char num2_mass[num1_length];
     MyLargeNumber num2 = {.size = num1_length, .num_first_cell = num1_mass, .is_negative = false};
     read_number_into_struct(&num1);
     print_my_large_number(num1);
@@ -206,7 +234,7 @@ int read_number_into_struct(MyLargeNumber *__dest)
         char digit = read_digit(__dest);
         if (digit == 11) // may lead to some errors ;-;
             __dest->is_negative = true;
-        
+
         __dest->num_first_cell[i] = digit;
     }
 }
@@ -217,19 +245,19 @@ char read_digit()
     if (possible_num == '-')
         return 11; // means -
 
-    int result = char_to_num(possible_num);
+    char result = char_to_num(possible_num);
     if (result == -1)
-        return BAD_OPPERAND_CODE; // TODO: Handle exception if num is not a number
-    
+        return BAD_OPERAND_CODE; // TODO: Handle exception if num is not a number
+
     return result;
 }
 
-int char_to_num(char __source)
+char char_to_num(char __source)
 {
     if (__source < '0' || __source > '9')
         return -1; // char not a number;
 
-    int num = __source - '0';
+    char num = __source - '0';
     return num;
 }
 
@@ -239,62 +267,111 @@ char get_operation()
     scanf("%c", &operation);
     if (!is_char_in_array(operation, 4, (char[]){'-', '+', '*', '/'})) // TODO: check if needs char[4]
     {
-        handle_fatal_error(BAD_OPPERATION_CODE);
+        handle_fatal_error(BAD_OPERATION_CODE);
     }
     char c = getchar();
     if (c != '\n')
-        handle_fatal_error(BAD_OPPERATION_CODE);
+        handle_fatal_error(BAD_OPERATION_CODE);
     return operation;
 }
 
-void print_my_large_number(MyLargeNumber number) {
-    for (int i = 0; i < number.size; ++i) {
-        fprintf(stdout, "%i",number.num_first_cell[i]);
+void print_my_large_number(MyLargeNumber number)
+{
+    for (int i = 0; i < number.size; ++i)
+    {
+        fprintf(stdout, "%i", number.num_first_cell[i]);
     }
+    fprintf(stdout,"\n");
 }
 
-MyLargeNumber *do_math(MyLargeNumber num1, MyLargeNumber num2, char operation) {
+MyLargeNumber *do_math(MyLargeNumber num1, MyLargeNumber num2, char operation)
+{
     MyLargeNumber *__answer;
     switch (operation)
     {
     case '+':
         __answer = do_sum(num1, num2);
         break;
-    case '-':
-        __answer = do_substraction(num1, num2);
-        break;
-    case '*':
-        __answer = do_multiplication(num1, num2);
-        break;
-    case '/':
-        __answer = do_division(num1, num2);
-        break;
+    // case '-':
+    //     __answer = do_substraction(num1, num2);
+    //     break;
+    // case '*':
+    //     __answer = do_multiplication(num1, num2);
+    //     break;
+    // case '/':
+    //     __answer = do_division(num1, num2);
+    //     break;
     default:
-        // TODO: Handle exception 
+        // TODO: Handle exception
         break;
     }
 }
 
-MyLargeNumber *do_sum(MyLargeNumber num1, MyLargeNumber num2){
+MyLargeNumber *do_sum(MyLargeNumber num1, MyLargeNumber num2)
+{
     int _new_digit_possible_size = get_max(num1.size, num2.size) + 1;
-    int *_new_digits = malloc(sizeof(int) * _new_digit_possible_size);
+    char *_new_digits = malloc(sizeof(char) * _new_digit_possible_size);
     int _index_of_current_new_digit = 0;
 
     int smallest_size = get_min(num1.size, num1.size);
     bool is_overflow = false;
-    for (int i = smallest_size; i > 0; --i){ // TODO: continue here
-        char new_digit;
-        if (is_overflow) { // get rid of overflow
-            new_digit = 1;
-            is_overflow = false;
-        }
-        char new_digit = num1.num_first_cell[i] + num2.num_first_cell[i];
-        if (new_digit > 9) {
-            is_overflow = true;
-            new_digit -= 10;
-        }
-        _new_digits[_index_of_current_new_digit] = new_digit;
+    // TODO:
+    for (int i = 0; i < _new_digit_possible_size - 1; ++i)
+    {
+        get_new_digit(num1, num2, _new_digits, i, _new_digit_possible_size, &is_overflow);
+        ++_index_of_current_new_digit;
     }
-    for (int i = _index_of_current_new_digit; i <)
+    // reverse the new num
 }
 
+void get_new_digit(MyLargeNumber num1, MyLargeNumber num2, char *_new_digits, int distance_from_end, int _new_digit_possible_size, bool *is_overflow)
+{
+    char new_digit;
+    if (*is_overflow)
+    {
+        new_digit = 1;
+        *is_overflow = false;
+    }
+    if (num1.size >= distance_from_end && num2.size >= distance_from_end)
+    { // Both numbers have next digit
+        new_digit = num1.num_first_cell[num1.size - distance_from_end] + num2.num_first_cell[num2.size - distance_from_end] + new_digit;
+        check_set_overflow(&new_digit, &is_overflow);
+        _new_digits[_new_digit_possible_size - distance_from_end] = new_digit;
+        return;
+    }
+    if (num1.size >= distance_from_end)
+    { // Number 1 has digit, number 2 doesnt
+        new_digit = num1.num_first_cell[num1.size - distance_from_end] + new_digit;
+        check_set_overflow(&new_digit, &is_overflow);
+        _new_digits[_new_digit_possible_size - distance_from_end] = new_digit;
+        return;
+    }
+    if (num2.size >= distance_from_end)
+    { // Number 2 has digit, number 1 doenst
+        new_digit = num2.num_first_cell[num2.size - distance_from_end] + new_digit;
+        check_set_overflow(&new_digit, &is_overflow);
+        _new_digits[_new_digit_possible_size - distance_from_end] = new_digit;
+        return;
+    }
+    if (new_digit == 1)
+    { // If overflown, add to last placec
+        _new_digits[_new_digit_possible_size - distance_from_end] = 1;
+        return;
+    }
+    _new_digits[_new_digit_possible_size - distance_from_end] = 0; // fill last place with 0
+    return;
+}
+
+void check_set_overflow(char *digit, bool *is_overflow)
+{
+    if (*digit > 9)
+    {
+        *is_overflow = true;
+        *digit -= 10;
+    }
+}
+
+void free_all(MyLargeNumber *_target)
+{
+    free(_target->num_first_cell);
+}
