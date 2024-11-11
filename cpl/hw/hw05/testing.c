@@ -1,17 +1,19 @@
 // #include "./my_str.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 // void test_my_strcat();
 
 // void test_my_strspn();
 void test_my_strtok();
 
+size_t get_first_non_delim_char_location(char *str, const char *delim, size_t delim_size);
+
 size_t get_delim_size(const char *delim);
-size_t find_next_delim_end(char *str, const char *delim, size_t *str_loc, size_t delim_size, int *done_flag);
+size_t find_next_delim_end(char *str, const char *delim, size_t *str_loc, size_t delim_size, bool *done_flag, bool *delim_found_flag);
 char *my_strtok(char *str, const char *delim);
 void fill_target_with_token(char *temp, size_t token_start, size_t token_end, char *str);
-
 
 int main()
 {
@@ -43,8 +45,8 @@ int main()
 
 void test_my_strtok()
 {
-    char str[] = "10,20,30,40,50";
-    const char delim[] = ",";
+    char str[] = ",..,..David,..david blake,.. bladsadas";
+    const char delim[] = ",..";
     char *token = my_strtok(str, delim);
 
     while (token != NULL)

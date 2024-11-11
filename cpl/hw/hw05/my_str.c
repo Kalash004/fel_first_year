@@ -1,11 +1,13 @@
 #include "./my_str.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 size_t _get_str_size(const char *_source);
 void fill_target_with_token(char *temp, size_t token_start, size_t token_end, char *str);
-size_t find_next_delim_end(char *str, const char *delim, size_t *str_loc, size_t delim_size, int *done_flag);
+size_t find_next_delim_end(char *str, const char *delim, size_t *str_loc, size_t delim_size, bool *done_flag, bool *delim_found_flag);
 size_t get_delim_size(const char *delim);
 int is_char_in_str(char c, const char *string);
+size_t get_first_non_delim_char_location(char *str, const char *delim, size_t delim_size);
 
 void my_strcat(char **_dest, const char **_source)
 {
@@ -78,9 +80,9 @@ char *my_strtok(char *str, const char *delim)
 {
     static size_t location_in_str;
     static char *save;
-    const size_t delim_size = get_delim_size(delim);
-    const size_t token_start = location_in_str;
-    static int is_done = 0;
+    size_t token_start = location_in_str;
+    static bool is_done = false;
+    static size_t delim_size;
 
     if (is_done)
     {
@@ -89,10 +91,17 @@ char *my_strtok(char *str, const char *delim)
 
     if (str != NULL)
     {
-        location_in_str = 0;
+        delim_size = get_delim_size(delim);
+        location_in_str = get_first_non_delim_char_location(str, delim, delim_size);
         save = str;
+        token_start = location_in_str;
     }
-    const size_t token_end = find_next_delim_end(save, delim, &location_in_str, delim_size, &is_done) - 1;
+    bool is_delim_found = false;
+    size_t token_end = find_next_delim_end(save, delim, &location_in_str, delim_size, &is_done, &is_delim_found);
+    if (is_delim_found)
+    {
+        token_end -= delim_size;
+    }
     const size_t token_size = token_end - token_start;
     char *temp = (char *)malloc((token_size + 1) * sizeof(char));
     fill_target_with_token(temp, token_start, token_end, save);
@@ -101,6 +110,10 @@ char *my_strtok(char *str, const char *delim)
 
 void fill_target_with_token(char *temp, size_t token_start, size_t token_end, char *str)
 {
+    if (token_start >= token_end)
+    {
+        return;
+    }
     size_t token_id = 0;
     for (size_t i = token_start; i < token_end; ++i)
     {
@@ -110,7 +123,7 @@ void fill_target_with_token(char *temp, size_t token_start, size_t token_end, ch
     temp[token_id] = '\0';
 }
 
-size_t find_next_delim_end(char *str, const char *delim, size_t *str_loc, size_t delim_size, int *done_flag)
+size_t find_next_delim_end(char *str, const char *delim, size_t *str_loc, size_t delim_size, bool *done_flag, bool *delim_found_flag)
 {
     char c;
     int delim_index = 0;
@@ -121,6 +134,7 @@ size_t find_next_delim_end(char *str, const char *delim, size_t *str_loc, size_t
         {
             if (delim_index == delim_size - 1) // end of delimiter
             {
+                *delim_found_flag = true;
                 ++*str_loc;
                 *done_flag = 0;
                 return *str_loc;
@@ -129,7 +143,7 @@ size_t find_next_delim_end(char *str, const char *delim, size_t *str_loc, size_t
         }
         ++*str_loc;
     } while (c != '\0');
-    *done_flag = 1;
+    *done_flag = true;
     return *str_loc;
 }
 
@@ -143,4 +157,30 @@ size_t get_delim_size(const char *delim)
         ++size;
     } while (c != '\0');
     return size - 1;
+}
+
+size_t get_first_non_delim_char_location(char *str, const char *delim, size_t delim_size)
+{
+    size_t location = 0;
+    char c;
+    do
+    {
+        c = str[location];
+        if (c == delim[0])
+        {
+            for (size_t i = 1; i < delim_size; ++i)
+            {
+                if (str[location + i] != delim[i])
+                {
+                    return location;
+                }
+            }
+            location += delim_size;
+        }
+        else
+        {
+            return location;
+        }
+    } while (c != '\0');
+    return location;
 }
