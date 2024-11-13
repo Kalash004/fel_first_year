@@ -13,6 +13,12 @@ typedef struct
 
 void test_regex();
 
+unsigned long foo(My_Regex **regex, const char *str, char **begin, size_t regex_size);
+
+long int is_c_in_regex(My_Regex **regex, const char c);
+
+bool is_c_in_reg_group(My_Regex *reg, const char c);
+
 My_Regex **load_patter_into_struct(const char *pattern);
 
 My_Regex *handle_group(size_t pattern_index, const char *pattern);
@@ -81,14 +87,86 @@ int main()
 
 void test_regex()
 {
-    const char *pattern = "anto[^nklt]";
+    const char *pattern = "[ao]nto[^nklt]";
+    const char *str = "anton";
     My_Regex **regex = load_patter_into_struct(pattern);
+    char *begin;
     print_regex(regex);
+    size_t reg_size = get_pattern_real_size(pattern);
+    foo(regex, str, &begin, reg_size);
 }
 
 unsigned long my_strstr_match(const char *str, const char *substr, char **begin)
 {
     return 0;
+}
+
+unsigned long foo(My_Regex **regex, const char *str, char **begin, size_t regex_size)
+{
+    size_t latest_found_regex;
+    char c;
+    size_t i = 0;
+    long int latest_id = -1;
+    do
+    {
+        if (regex_size - 1 == latest_id)
+        {
+            // TODO:
+            return latest_found_regex;
+        }
+
+        c = str[i];
+        long int c_in_reg = is_c_in_regex(regex, c);
+        if (c_in_reg - 1 == latest_id)
+        {
+            latest_id = c_in_reg;
+        }
+        if (c_in_reg == 0)
+        {
+            latest_found_regex = i;
+        }
+        ++i;
+    } while (c != '\0');
+}
+
+long int is_c_in_regex(My_Regex **regex, const char c, size_t last_reg_id) // TODO : !!!!
+{
+    size_t i = 0;
+    My_Regex *reg;
+    do
+    {   
+        reg = regex[i];
+        if (reg->is_end_cell)
+            return -1;
+        if (reg->is_regex_group)
+        {
+            if (is_c_in_reg_group(reg, c))
+                return i;
+            ++i;
+            continue;
+        }
+        if (c == reg->regex[0])
+        {
+            return i;
+        }
+        ++i;
+    } while (!reg->is_end_cell);
+    return -1;
+}
+
+bool is_c_in_reg_group(My_Regex *reg, const char c)
+{
+    char reg_char;
+    size_t i = 0;
+    do
+    {
+        reg_char = reg->regex[i];
+        if (reg_char == c)
+            return true;
+
+        ++i;
+    } while (reg_char != '\0');
+    return false;
 }
 
 My_Regex **load_patter_into_struct(const char *pattern)
@@ -155,7 +233,8 @@ My_Regex *handle_group(size_t pattern_index, const char *pattern)
 
     ++pattern_index;
     char c = pattern[pattern_index];
-    if (c == '^') {
+    if (c == '^')
+    {
         pRegex->is_prohibition_group = true;
         ++pattern_index;
     }
@@ -176,7 +255,7 @@ size_t get_group_size(size_t pattern_index, const char *pattern)
     do
     {
         c = pattern[pattern_index];
-        if ( c == '^') // TODO : possible error
+        if (c == '^') // TODO : possible error
             --size;
         ++pattern_index;
         ++size;
@@ -226,12 +305,14 @@ void print_regex(My_Regex **regex)
         reg = *(regex[i]);
         if (!reg.is_end_cell)
         {
-            if (reg.is_prohibition_group) {
+            if (reg.is_prohibition_group)
+            {
                 printf("[^%s]", reg.regex);
                 ++i;
                 continue;
             }
-            if (reg.is_regex_group) {
+            if (reg.is_regex_group)
+            {
                 printf("[%s]", reg.regex);
                 ++i;
                 continue;
