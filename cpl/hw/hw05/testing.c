@@ -11,6 +11,8 @@ typedef struct
     char *regex;
 } My_Regex;
 
+void test_regex();
+
 My_Regex **load_patter_into_struct(const char *pattern);
 
 My_Regex *handle_group(size_t pattern_index, const char *pattern);
@@ -79,13 +81,14 @@ int main()
 
 void test_regex()
 {
-    const char *pattern = "anton[k]";
+    const char *pattern = "anto[^nklt]";
     My_Regex **regex = load_patter_into_struct(pattern);
     print_regex(regex);
 }
 
 unsigned long my_strstr_match(const char *str, const char *substr, char **begin)
 {
+    return 0;
 }
 
 My_Regex **load_patter_into_struct(const char *pattern)
@@ -106,10 +109,10 @@ My_Regex **load_patter_into_struct(const char *pattern)
         if (c == '[')
         {
             size_t group_length = get_group_size(pattern_index, pattern);
-            My_Regex *reg = handle_group(pattern_index, pattern);
+            reg = handle_group(pattern_index, pattern);
             if (reg == NULL)
                 return NULL; // TODO: Handle null;
-            pattern_index += group_length - 1;
+            pattern_index += group_length;
         }
         else
         {
@@ -152,8 +155,10 @@ My_Regex *handle_group(size_t pattern_index, const char *pattern)
 
     ++pattern_index;
     char c = pattern[pattern_index];
-    if (c == '^')
+    if (c == '^') {
         pRegex->is_prohibition_group = true;
+        ++pattern_index;
+    }
 
     size_t group_index = 0;
     for (; group_index < group_size - 2; ++pattern_index, ++group_index)
@@ -171,6 +176,8 @@ size_t get_group_size(size_t pattern_index, const char *pattern)
     do
     {
         c = pattern[pattern_index];
+        if ( c == '^') // TODO : possible error
+            --size;
         ++pattern_index;
         ++size;
     } while (c != ']' && c != '\0');
@@ -219,6 +226,16 @@ void print_regex(My_Regex **regex)
         reg = *(regex[i]);
         if (!reg.is_end_cell)
         {
+            if (reg.is_prohibition_group) {
+                printf("[^%s]", reg.regex);
+                ++i;
+                continue;
+            }
+            if (reg.is_regex_group) {
+                printf("[%s]", reg.regex);
+                ++i;
+                continue;
+            }
             printf("%s", reg.regex);
         }
         ++i;
@@ -228,4 +245,5 @@ void print_regex(My_Regex **regex)
 
 bool is_match(const char c, const char *regex, size_t regex_character_id)
 {
+    return true;
 }
