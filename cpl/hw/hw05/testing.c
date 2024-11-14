@@ -13,9 +13,11 @@ typedef struct
 
 void test_regex();
 
-unsigned long foo(My_Regex **regex, const char *str, char **begin, size_t regex_size);
+unsigned long my_strstr_match(const char *str, const char *substr, char **begin);
 
-long int is_c_in_regex(My_Regex **regex, const char c);
+long int foo(My_Regex **regex, const char *str, size_t regex_size);
+
+long int is_c_in_regex(My_Regex **regex, const char c, size_t last_reg_id);
 
 bool is_c_in_reg_group(My_Regex *reg, const char c);
 
@@ -87,59 +89,95 @@ int main()
 
 void test_regex()
 {
-    const char *pattern = "[ao]nto[^nklt]";
-    const char *str = "anton";
+    const char *pattern = "test";
+    const char *str = "";
     My_Regex **regex = load_patter_into_struct(pattern);
     char *begin;
-    print_regex(regex);
-    size_t reg_size = get_pattern_real_size(pattern);
-    foo(regex, str, &begin, reg_size);
+    my_strstr_match(str, pattern, &begin);
+    if (begin != NULL)
+    {
+        printf("%s\n", begin);
+    }
 }
 
 unsigned long my_strstr_match(const char *str, const char *substr, char **begin)
 {
-    return 0;
+    My_Regex **regex = load_patter_into_struct(substr);
+    size_t reg_size = get_pattern_real_size(substr);
+    long int start_index = foo(regex, str, reg_size);
+    if (start_index == -1)
+    {
+        *begin = NULL;
+        return 0;
+    }
+    char *temp = malloc(sizeof(char) * (reg_size + 1));
+    size_t used = 0;
+    for (size_t i = start_index; i < start_index + reg_size; ++i, ++used)
+    {
+        temp[used] = str[i];
+    }
+    temp[++used] = '\0';
+    *begin = temp;
+    return reg_size;
 }
 
-unsigned long foo(My_Regex **regex, const char *str, char **begin, size_t regex_size)
+long int foo(My_Regex **regex, const char *str, size_t regex_size)
 {
-    size_t latest_found_regex;
+    size_t latest_found_regex_id = 0;
     char c;
     size_t i = 0;
-    long int latest_id = -1;
+    long int latest_regex_start_id = -1;
     do
     {
-        if (regex_size - 1 == latest_id)
-        {
-            // TODO:
-            return latest_found_regex;
-        }
 
         c = str[i];
-        long int c_in_reg = is_c_in_regex(regex, c);
-        if (c_in_reg - 1 == latest_id)
+        if (regex_size - 1 == latest_found_regex_id && latest_regex_start_id > -1)
         {
-            latest_id = c_in_reg;
+            return latest_regex_start_id;
         }
+        long int c_in_reg = is_c_in_regex(regex, c, latest_found_regex_id);
         if (c_in_reg == 0)
         {
-            latest_found_regex = i;
+            latest_regex_start_id = i;
+            ++i;
+            continue;
+        }
+        if (c_in_reg - 1 == latest_found_regex_id)
+        {
+            latest_found_regex_id = c_in_reg;
+            ++i;
+            continue;
+        }
+        if (c_in_reg - 1 != latest_found_regex_id)
+        {
+            latest_regex_start_id = -1;
+            latest_found_regex_id = 0;
         }
         ++i;
     } while (c != '\0');
+    return -1;
 }
 
 long int is_c_in_regex(My_Regex **regex, const char c, size_t last_reg_id) // TODO : !!!!
 {
-    size_t i = 0;
+    size_t i = last_reg_id;
+    if (last_reg_id > 0)
+    {
+        ++i;
+    }
     My_Regex *reg;
     do
-    {   
+    {
         reg = regex[i];
         if (reg->is_end_cell)
             return -1;
         if (reg->is_regex_group)
         {
+            if (reg->is_prohibition_group)
+            {
+                if (!is_c_in_reg_group(reg, c))
+                    return i;
+            }
             if (is_c_in_reg_group(reg, c))
                 return i;
             ++i;
@@ -188,9 +226,16 @@ My_Regex **load_patter_into_struct(const char *pattern)
         {
             size_t group_length = get_group_size(pattern_index, pattern);
             reg = handle_group(pattern_index, pattern);
+            regex_array[loop] = reg;
+            ++loop;
             if (reg == NULL)
                 return NULL; // TODO: Handle null;
-            pattern_index += group_length;
+            do
+            {
+                c = pattern[pattern_index];
+                ++pattern_index;
+            } while (c != ']');
+            continue;
         }
         else
         {
@@ -322,9 +367,4 @@ void print_regex(My_Regex **regex)
         ++i;
     } while (!reg.is_end_cell);
     fflush(stdout);
-}
-
-bool is_match(const char c, const char *regex, size_t regex_character_id)
-{
-    return true;
 }
