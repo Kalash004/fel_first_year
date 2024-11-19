@@ -89,11 +89,13 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 }
 // ----------------- Error handling -------------------------------------
 #include <ctype.h>
+#include <stdbool.h>
 
 typedef struct
 {
     int x;
     int y;
+    bool is_last_cell;
 } Vector2D;
 
 char *read_input_ciphered(size_t *length);
@@ -114,25 +116,13 @@ int validate_same_length(size_t ciphered_len, size_t partial_len);
 
 char *handle_decipher(char *ciphered, char *partial, size_t len);
 
-size_t handle_shift_comparison(int shift, char *ciphered, char *partial, size_t str_len);
-
 char *get_ciphered_after_shift(int shift, char *ciphered, size_t str_len);
 
-size_t get_compare_rate(char *to_compare, char *partial);
-
-int check_can_shift(int current_shift, char *ciphered, size_t str_len, int step);
-
-int get_best_shift_handler(char *ciphered, char *partial, size_t len);
-
-int get_best_shift_handler_v2(char *ciphered, char *partial, size_t len);
+int get_shift(char *ciphered, char *partial, size_t len);
 
 int increase_count_of_occurrences(Vector2D *vecs, int shift);
 
-int get_best_shift_right(char *ciphered, char *partial, size_t len, size_t *best_rate, int *best_shift);
-
-int get_best_shift_left(char *ciphered, char *partial, size_t len, size_t *best_rate, int *best_shift);
-
-void get_best_shift(char *ciphered, char *partial, size_t len, size_t *best_rate, int *best_shift, int step);
+void zero_out_vectors(Vector2D *vecs, size_t len);
 
 int main(void)
 {
@@ -210,6 +200,7 @@ void *my_malloc(size_t size)
     {
         handle_fatal_error(MALLOC_ERROR);
     }
+    return temp;
 }
 
 void *my_realloc(void *source, size_t size)
@@ -220,6 +211,7 @@ void *my_realloc(void *source, size_t size)
         free(source); // possible data loss
         handle_fatal_error(MALLOC_ERROR);
     }
+    return temp;
 }
 
 int validate_ciphered_partial(char *ciphered, char *deciphered)
@@ -258,28 +250,19 @@ int validate_same_length(size_t ciphered_len, size_t partial_len)
 
 char *handle_decipher(char *ciphered, char *partial, size_t len)
 {
-    int shift = get_best_shift_handler(ciphered, partial, len);
+    int shift = get_shift(ciphered, partial, len);
     shift *= -1;
     char *temp = get_ciphered_after_shift(shift, ciphered, len);
     return temp;
-}
-
-size_t handle_shift_comparison(int shift, char *ciphered, char *partial, size_t str_len)
-{
-    char *to_compare = get_ciphered_after_shift(shift, ciphered, str_len);
-    size_t rate = get_compare_rate(to_compare, partial);
-    free(to_compare);
-    return rate;
 }
 
 char *get_ciphered_after_shift(int shift, char *ciphered, size_t str_len)
 {
     char *temp = my_malloc(str_len * sizeof(char));
     char c;
-
     size_t i = 0;
     do
-    {   
+    {
         // Some fun ASCII table black sorcery - please let me live
         c = ciphered[i];
         if (c == '\0')
@@ -295,10 +278,16 @@ char *get_ciphered_after_shift(int shift, char *ciphered, size_t str_len)
         {
             c = c + shift + 6;
         }
+        else if (c >= 'a' && (c + shift < 'a'))
+        {
+            c = c + shift - 6;
+        }
         else if (c + shift < 'A')
         {
             c = c + shift + 58;
-        } else {
+        }
+        else
+        {
             c = c + shift;
         }
         temp[i] = c;
@@ -307,50 +296,14 @@ char *get_ciphered_after_shift(int shift, char *ciphered, size_t str_len)
     return temp;
 }
 
-size_t get_compare_rate(char *to_compare, char *partial)
-{
-    char compare_c;
-    char partial_c;
-    size_t rate = 0;
-    size_t i = 0;
-    do
-    {
-        compare_c = to_compare[i];
-        partial_c = partial[i];
-        if ((compare_c != '\0' && partial_c != '\0') && (compare_c == partial_c))
-            ++rate;
-        ++i;
-    } while (compare_c != '\0');
-    return rate;
-}
-
-int check_can_shift(int current_shift, char *ciphered, size_t str_len, int step)
-{
-    char *temp = get_ciphered_after_shift(current_shift + step, ciphered, str_len);
-    int res = validate_text_is_abc(temp);
-    free(temp);
-    return res;
-}
-
-int get_best_shift_handler(char *ciphered, char *partial, size_t len)
-{
-    // size_t best_rate = 0;
-    // int best_shift = 0;
-    // get_best_shift_right(ciphered, partial, len, &best_rate, &best_shift);
-    // get_best_shift_left(ciphered, partial, len, &best_rate, &best_shift);
-    // return best_shift;
-    int best_shift = get_best_shift_handler_v2(ciphered, partial, len);
-    return best_shift;
-}
-
-int get_best_shift_handler_v2(char *ciphered, char *partial, size_t len)
+int get_shift(char *ciphered, char *partial, size_t len)
 {
     char ciphered_c;
     char partial_c;
     size_t i = 0;
     Vector2D vecs[len + 1];
-    vecs[len] = (Vector2D){.x = 0, .y = -1}; // make end element
-    zero_out_vectors(vecs);
+    vecs[len] = (Vector2D){.x = 0, .y = 0, .is_last_cell = true}; // make end element
+    zero_out_vectors(vecs, len);
     size_t latest_vecs_index = 0;
     int shift = 0;
     // hashmap would be great for this
@@ -361,7 +314,7 @@ int get_best_shift_handler_v2(char *ciphered, char *partial, size_t len)
         shift = ciphered_c - partial_c;
         if (!increase_count_of_occurrences(vecs, shift))
         {
-            Vector2D vec = {.x = shift, .y = 1}; // y = count of occurrences
+            Vector2D vec = {.x = shift, .y = 1, .is_last_cell = false}; // y = count of occurrences
             vecs[latest_vecs_index] = vec;
             ++latest_vecs_index;
         }
@@ -380,7 +333,7 @@ int get_best_shift_handler_v2(char *ciphered, char *partial, size_t len)
             target_shift = vec.x;
         }
         ++j;
-    } while (vec.x != 0 && vec.y != 0);
+    } while (!vec.is_last_cell);
     return target_shift;
 }
 
@@ -393,54 +346,20 @@ int increase_count_of_occurrences(Vector2D *vecs, int shift)
         vec = vecs[i];
         if (vec.x == shift && vec.y != -1)
         {
-            vecs[i] = (Vector2D){.x = vec.x, .y = vec.y + 1};
+            vecs[i] = (Vector2D){.x = vec.x, .y = vec.y + 1, .is_last_cell = false};
             return 1;
         }
         ++i;
-    } while (vec.y != -1);
+    } while (!vec.is_last_cell);
     return 0;
 }
 
-void zero_out_vectors(Vector2D *vecs)
+void zero_out_vectors(Vector2D *vecs, size_t len)
 {
-    Vector2D vec;
-    size_t i = 0;
-    do
+    for (size_t i = 0; i < len - 1; ++i)
     {
-        vec = vecs[i];
-        if (vec.y == -1)
-            break;
-        vecs[i] = (Vector2D){.x = 0, .y = 0};
-        ++i;
-    } while (vec.y != -1); // TODO: fix possible error with -1 automatically contained in the array
-}
 
-int get_best_shift_right(char *ciphered, char *partial, size_t len, size_t *best_rate, int *best_shift)
-{
-    get_best_shift(ciphered, partial, len, best_rate, best_shift, +1);
-}
-
-int get_best_shift_left(char *ciphered, char *partial, size_t len, size_t *best_rate, int *best_shift)
-{
-    get_best_shift(ciphered, partial, len, best_rate, best_shift, -1);
-}
-
-void get_best_shift(char *ciphered, char *partial, size_t len, size_t *best_rate, int *best_shift, int step)
-{
-    int current_shift = 0;
-    do
-    {
-        // check rate and save best rate
-        size_t rate = handle_shift_comparison(current_shift, ciphered, partial, len);
-        if (rate > *best_rate)
-        {
-            *best_rate = rate;
-            *best_shift = current_shift;
-        }
-        // check if can shift again
-        if (!check_can_shift(current_shift, ciphered, len, step))
-            break;
-        // change shift if can
-        current_shift += step;
-    } while (1);
+        vecs[i] = (Vector2D){.x = 0, .y = 0, .is_last_cell = false};
+    }
+    vecs[len - 1] = (Vector2D){.x = 0, .y = 0, .is_last_cell = true};
 }
