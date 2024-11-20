@@ -256,7 +256,8 @@ char *handle_decipher(char *ciphered, char *partial, size_t len)
 }
 
 char *decipher(int shift, char *ciphered, size_t str_len)
-{
+{   
+    char alpha[] = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
     char *temp = my_malloc(str_len * sizeof(char));
     char c;
     size_t i = 0;
@@ -269,10 +270,22 @@ char *decipher(int shift, char *ciphered, size_t str_len)
             temp[i] = '\0';
             break;
         }
-        if (c + shift > 'z')
+        if (shift > 10 && (c + shift > 'z'))
         {
             int offset = c + shift - 'z';
+            c = offset + 'A' - 1 - 6; // 58 is offset to get to start of letters in ascii table
+        }
+        else if (shift < -10 && (c + shift > 'z')) {
+            int offset = c + shift - 'z';
+            c = offset + 'A' - 1 + 6; // 58 is offset to get to start of letters in ascii table
+        }
+        else if (c + shift > 'z') {
+            int offset = c + shift - 'z';
             c = offset + 'A' - 1; // 58 is offset to get to start of letters in ascii table
+        }
+        else if (shift < -10 && (c + shift < 'A')) {
+            int offset = c + shift - 'A';
+            c = 'z' - offset;
         }
         else if (c <= 'Z' && (c + shift > 'Z') && (c + shift < 'a'))
         {
