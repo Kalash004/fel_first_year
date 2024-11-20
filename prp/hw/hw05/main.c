@@ -91,7 +91,7 @@ void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size
 #include <ctype.h>
 #include <stdbool.h>
 
-char alphabet[] = {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+char alphabet[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'};
 
 typedef struct
 {
@@ -100,27 +100,25 @@ typedef struct
     bool is_last_cell;
 } Vector2D;
 
-char *read_input_ciphered(size_t *length);
+int *read_input_ciphered(size_t *length);
 
-char *read_input_partial_deciphered(size_t *length);
+int *read_input_partial_deciphered(size_t *length);
 
-char *read_unknown_length_input(size_t *length);
+int *read_unknown_length_input(size_t *length);
+
+int get_char_alphabet_index_Representation(char c);
 
 void *my_malloc(size_t size);
 
 void *my_realloc(void *source, size_t size);
 
-int validate_ciphered_partial(char *ciphered, char *deciphered);
-
-int validate_text_is_abc(char *text);
-
 int validate_same_length(size_t ciphered_len, size_t partial_len);
 
-char *handle_decipher(char *ciphered, char *partial, size_t len);
+char *handle_decipher(int *ciphered, int *partial, size_t len);
 
-char *decipher(int shift, char *ciphered, size_t str_len);
+char *decipher(int shift, int *ciphered, size_t str_len);
 
-int get_shift(char *ciphered, char *partial, size_t len);
+int get_shift(int *ciphered, int *partial, size_t len);
 
 int increase_count_of_occurrences(Vector2D *vecs, int shift);
 
@@ -129,16 +127,9 @@ void zero_out_vectors(Vector2D *vecs, size_t len);
 int main(void)
 {
     size_t ciphered_len = 0;
-    char *ciphered = read_input_ciphered(&ciphered_len);
+    int *ciphered = read_input_ciphered(&ciphered_len);
     size_t partial_len = 0;
-    char *partial_deciphered = read_input_partial_deciphered(&partial_len);
-    // check ciphered and partial_deciphered are using abcde...
-    if (!validate_ciphered_partial(ciphered, partial_deciphered))
-    {
-        free(ciphered);
-        free(partial_deciphered);
-        handle_fatal_error(INPUT_ERR_CODE);
-    }
+    int *partial_deciphered = read_input_partial_deciphered(&partial_len);
     // check ciphered_len and partial_len are same
     if (!validate_same_length(ciphered_len, partial_len))
     {
@@ -156,43 +147,56 @@ int main(void)
     free(truly_deciphered);
 }
 
-char *read_input_ciphered(size_t *length)
+int *read_input_ciphered(size_t *length)
 {
     return read_unknown_length_input(length);
 }
 
-char *read_input_partial_deciphered(size_t *length)
+int *read_input_partial_deciphered(size_t *length)
 {
     return read_unknown_length_input(length);
 }
 
-char *read_unknown_length_input(size_t *length)
+int *read_unknown_length_input(size_t *length)
 {
     size_t buffer_size = INITIAL_BUFFER_SIZE;
     size_t current_cell = 0;
-    char *buffer = my_malloc(buffer_size * sizeof(char));
+    int *buffer = my_malloc(buffer_size * sizeof(int));
     char last_char;
     do
     {
         // get char
         last_char = getc(stdin);
+        if (last_char == '\n')
+            break;
+        if (!isalpha(last_char))
+            handle_fatal_error(INPUT_ERR_CODE);
+
+        int index_repr = get_char_alphabet_index_Representation(last_char); // get array representation
         // check buffer is big enough
-        if (current_cell > buffer_size - 1)
+        if (current_cell > buffer_size - 2)
         {
             buffer_size *= 2;
-            buffer = my_realloc(buffer, buffer_size);
+            buffer = my_realloc(buffer, buffer_size * sizeof(int));
         }
-        buffer[current_cell] = last_char;
+        buffer[current_cell] = index_repr;
         ++current_cell;
     } while (last_char != '\n');
     if (current_cell == 0)
     {
         // TODO: handle no input
     }
-    --current_cell;
-    buffer[current_cell] = '\0'; // change \n for \0
     *length = current_cell;
     return buffer;
+}
+
+int get_char_alphabet_index_Representation(char c)
+{
+    if (c >= 'a')
+    {
+        return (int)c - 'a' + 26;
+    }
+    return (int)c - 'A';
 }
 
 void *my_malloc(size_t size)
@@ -216,33 +220,6 @@ void *my_realloc(void *source, size_t size)
     return temp;
 }
 
-int validate_ciphered_partial(char *ciphered, char *deciphered)
-{
-    if (!validate_text_is_abc(ciphered))
-        return 0;
-    if (!validate_text_is_abc(deciphered))
-        return 0;
-    return 1;
-}
-
-int validate_text_is_abc(char *text)
-{
-    char c;
-    size_t i = 0;
-    do
-    {
-        c = text[i];
-        if (c == '\0')
-            break;
-        ++i;
-        if (!isalpha(c))
-        {
-            return 0;
-        }
-    } while (c != '\0');
-    return 1;
-}
-
 int validate_same_length(size_t ciphered_len, size_t partial_len)
 {
     if (ciphered_len != partial_len)
@@ -250,68 +227,39 @@ int validate_same_length(size_t ciphered_len, size_t partial_len)
     return 1;
 }
 
-char *handle_decipher(char *ciphered, char *partial, size_t len)
+char *handle_decipher(int *ciphered, int *partial, size_t len)
 {
     int shift = get_shift(ciphered, partial, len);
     char *temp = decipher(shift, ciphered, len);
     return temp;
 }
 
-char *decipher(int shift, char *ciphered, size_t str_len)
-{   
-    
-    char *temp = my_malloc(str_len * sizeof(char));
+char *decipher(int shift, int *ciphered, size_t str_len)
+{
+
+    char *temp = my_malloc((str_len + 1) * sizeof(char));
     char c;
     size_t i = 0;
     do
     {
         // Some fun ASCII table black sorcery - please let me live
-        c = ciphered[i];
-        if (c == '\0')
+        if ((int)ciphered[i] + shift > 51)
         {
-            temp[i] = '\0';
-            break;
+            shift -= 52;
         }
-        if (shift > 10 && (c + shift > 'z'))
+        else if ((int)ciphered[i] + shift < 0)
         {
-            int offset = c + shift - 'z';
-            c = offset + 'A' - 1 - 6; // 58 is offset to get to start of letters in ascii table
+            shift += 52;
         }
-        else if (shift < -10 && (c + shift > 'z')) {
-            int offset = c + shift - 'z';
-            c = offset + 'A' - 1 + 6; // 58 is offset to get to start of letters in ascii table
-        }
-        else if (c + shift > 'z') {
-            int offset = c + shift - 'z';
-            c = offset + 'A' - 1; // 58 is offset to get to start of letters in ascii table
-        }
-        else if (shift < -10 && (c + shift < 'A')) {
-            int offset = c + shift - 'A';
-            c = 'z' - offset;
-        }
-        else if (c <= 'Z' && (c + shift > 'Z') && (c + shift < 'a'))
-        {
-            c = c + shift + 6;
-        }
-        else if (c >= 'a' && (c + shift < 'a') && (c + shift > 'Z'))
-        {
-            c = c + shift - 6;
-        }
-        else if (c + shift < 'A')
-        {
-            c = c + shift + 58;
-        }
-        else
-        {
-            c = c + shift;
-        }
+        c = alphabet[ciphered[i] + shift];
         temp[i] = c;
-        ++i;
-    } while (c != '\0');
+            ++i;
+    } while (i < str_len);
+    temp[i] = '\0';
     return temp;
 }
 
-int get_shift(char *ciphered, char *partial, size_t len)
+int get_shift(int *ciphered, int *partial, size_t len)
 {
     char ciphered_c;
     char partial_c;
