@@ -97,7 +97,6 @@ typedef struct
 {
     int x;
     int y;
-    bool is_last_cell;
 } Vector2D;
 
 int *read_input_ciphered(size_t *length);
@@ -120,7 +119,7 @@ char *decipher(int shift, int *ciphered, size_t str_len);
 
 int get_shift(int *ciphered, int *partial, size_t len);
 
-int increase_count_of_occurrences(Vector2D *vecs, int shift);
+int increase_count_of_occurrences(Vector2D *vecs, int shift, size_t len);
 
 void zero_out_vectors(Vector2D *vecs, size_t len);
 
@@ -130,17 +129,14 @@ int main(void)
     int *ciphered = read_input_ciphered(&ciphered_len);
     size_t partial_len = 0;
     int *partial_deciphered = read_input_partial_deciphered(&partial_len);
-    // check ciphered_len and partial_len are same
-    if (!validate_same_length(ciphered_len, partial_len))
-    {
-        free(ciphered);
-        free(partial_deciphered);
-        handle_fatal_error(INPUT_TEXTS_DIFFERENT_SIZE_CODE);
-    }
+    // if (!validate_same_length(ciphered_len, partial_len))
+    // {
+    //     free(ciphered);
+    //     free(partial_deciphered);
+    //     handle_fatal_error(INPUT_TEXTS_DIFFERENT_SIZE_CODE);
+    // }
 
-    // decipher
     char *truly_deciphered = handle_decipher(ciphered, partial_deciphered, ciphered_len);
-    // print deciphered
     printf("%s\n", truly_deciphered);
     free(ciphered);
     free(partial_deciphered);
@@ -176,7 +172,7 @@ int *read_unknown_length_input(size_t *length)
         // check buffer is big enough
         if (current_cell > buffer_size - 2)
         {
-            buffer_size *= 2;
+            buffer_size += 100;
             buffer = my_realloc(buffer, buffer_size * sizeof(int));
         }
         buffer[current_cell] = index_repr;
@@ -242,7 +238,6 @@ char *decipher(int shift, int *ciphered, size_t str_len)
     size_t i = 0;
     do
     {
-        // Some fun ASCII table black sorcery - please let me live
         if ((int)ciphered[i] + shift > 51)
         {
             shift -= 52;
@@ -253,7 +248,7 @@ char *decipher(int shift, int *ciphered, size_t str_len)
         }
         c = alphabet[ciphered[i] + shift];
         temp[i] = c;
-            ++i;
+        ++i;
     } while (i < str_len);
     temp[i] = '\0';
     return temp;
@@ -261,28 +256,35 @@ char *decipher(int shift, int *ciphered, size_t str_len)
 
 int get_shift(int *ciphered, int *partial, size_t len)
 {
-    char ciphered_c;
-    char partial_c;
+    // Getting all possible shifts
+    int ciphered_c;
+    int partial_c;
     size_t i = 0;
-    Vector2D vecs[len + 1];
-    vecs[len] = (Vector2D){.x = 0, .y = 0, .is_last_cell = true}; // make end element
-    zero_out_vectors(vecs, len);
-    size_t latest_vecs_index = 0;
+    size_t vecs_buffer_size = INITIAL_BUFFER_SIZE;
+    size_t used_vecs = 0;
+    Vector2D *vecs = my_malloc(vecs_buffer_size * sizeof(Vector2D));
+    zero_out_vectors(vecs, vecs_buffer_size);
     int shift = 0;
-    // hashmap would be great for this
     do
     {
         ciphered_c = ciphered[i];
         partial_c = partial[i];
         shift = partial_c - ciphered_c;
-        if (!increase_count_of_occurrences(vecs, shift))
+        if (!increase_count_of_occurrences(vecs, shift, used_vecs))
         {
-            Vector2D vec = {.x = shift, .y = 1, .is_last_cell = false}; // y = count of occurrences
-            vecs[latest_vecs_index] = vec;
-            ++latest_vecs_index;
+            if (used_vecs > vecs_buffer_size - 3)
+            {
+                vecs_buffer_size += 5;
+                vecs = my_realloc(vecs, vecs_buffer_size * sizeof(Vector2D));
+            }
+            Vector2D vec = {.x = shift, .y = 1}; // .y = count of occurrences .x = shift
+            vecs[used_vecs] = vec;
+            ++used_vecs;
         }
         ++i;
-    } while (ciphered_c != '\0');
+    } while (i < len);
+
+    // Finding most occurred shift
     Vector2D vec;
     int largest_occur = 0;
     int target_shift = 0;
@@ -296,11 +298,12 @@ int get_shift(int *ciphered, int *partial, size_t len)
             target_shift = vec.x;
         }
         ++j;
-    } while (!vec.is_last_cell);
+    } while (j < used_vecs);
+    free(vecs);
     return target_shift;
 }
 
-int increase_count_of_occurrences(Vector2D *vecs, int shift)
+int increase_count_of_occurrences(Vector2D *vecs, int shift, size_t len)
 {
     Vector2D vec;
     size_t i = 0;
@@ -309,20 +312,20 @@ int increase_count_of_occurrences(Vector2D *vecs, int shift)
         vec = vecs[i];
         if (vec.x == shift && vec.y != -1)
         {
-            vecs[i] = (Vector2D){.x = vec.x, .y = vec.y + 1, .is_last_cell = false};
+            vecs[i] = (Vector2D){.x = vec.x, .y = vec.y + 1};
             return 1;
         }
         ++i;
-    } while (!vec.is_last_cell);
+    } while (i < len);
     return 0;
 }
 
 void zero_out_vectors(Vector2D *vecs, size_t len)
 {
-    for (size_t i = 0; i < len - 1; ++i)
+    for (size_t i = 0; i < len; ++i)
     {
 
-        vecs[i] = (Vector2D){.x = 0, .y = 0, .is_last_cell = false};
+        vecs[i] = (Vector2D){.x = -1, .y = -1};
     }
-    vecs[len - 1] = (Vector2D){.x = 0, .y = 0, .is_last_cell = true};
+    vecs[len - 1] = (Vector2D){.x = -1, .y = -1};
 }
