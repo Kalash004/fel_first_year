@@ -116,7 +116,7 @@ int validate_same_length(size_t ciphered_len, size_t partial_len);
 
 char *handle_decipher(char *ciphered, char *partial, size_t len);
 
-char *get_ciphered_after_shift(int shift, char *ciphered, size_t str_len);
+char *decipher(int shift, char *ciphered, size_t str_len);
 
 int get_shift(char *ciphered, char *partial, size_t len);
 
@@ -251,12 +251,11 @@ int validate_same_length(size_t ciphered_len, size_t partial_len)
 char *handle_decipher(char *ciphered, char *partial, size_t len)
 {
     int shift = get_shift(ciphered, partial, len);
-    shift *= -1;
-    char *temp = get_ciphered_after_shift(shift, ciphered, len);
+    char *temp = decipher(shift, ciphered, len);
     return temp;
 }
 
-char *get_ciphered_after_shift(int shift, char *ciphered, size_t str_len)
+char *decipher(int shift, char *ciphered, size_t str_len)
 {
     char *temp = my_malloc(str_len * sizeof(char));
     char c;
@@ -272,13 +271,14 @@ char *get_ciphered_after_shift(int shift, char *ciphered, size_t str_len)
         }
         if (c + shift > 'z')
         {
-            c = c + shift - 58; // 58 is offset to get to start of letters in ascii table
+            int offset = c + shift - 'z';
+            c = offset + 'A' - 1; // 58 is offset to get to start of letters in ascii table
         }
-        else if (c < 'a' && (c + shift > 'Z'))
+        else if (c <= 'Z' && (c + shift > 'Z') && (c + shift < 'a'))
         {
             c = c + shift + 6;
         }
-        else if (c >= 'a' && (c + shift < 'a'))
+        else if (c >= 'a' && (c + shift < 'a') && (c + shift > 'Z'))
         {
             c = c + shift - 6;
         }
@@ -311,7 +311,7 @@ int get_shift(char *ciphered, char *partial, size_t len)
     {
         ciphered_c = ciphered[i];
         partial_c = partial[i];
-        shift = ciphered_c - partial_c;
+        shift = partial_c - ciphered_c;
         if (!increase_count_of_occurrences(vecs, shift))
         {
             Vector2D vec = {.x = shift, .y = 1, .is_last_cell = false}; // y = count of occurrences
