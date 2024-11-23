@@ -161,7 +161,8 @@ class GameState:
             
 class MyPlayer:
     """
-        Player plays, game games
+        - Evaluate moves heuristic
+        - weight and flips to select move.
     """
     POSITION_WEIGHTS = [
     [100, -50, 10, 10, 10, 10, -50, 100],
