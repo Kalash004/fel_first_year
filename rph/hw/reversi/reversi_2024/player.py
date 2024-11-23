@@ -179,7 +179,7 @@ class MyPlayer:
         self.opponent_color = opponent_color
         self.history = []
         self.game_state = None
-        self.selected_tactic = self.__TACTIC_heuristic_with_corner_priority
+        self.selected_tactic = self.__TACTIC_heuristic_best_move
  
         
     def __evaluate_move_weight(self, move):
