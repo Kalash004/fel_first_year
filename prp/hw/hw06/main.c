@@ -166,7 +166,7 @@ Matrix *handle_multiplication(Matrix matrix_a, Matrix matrix_b)
     Matrix* larger_matrix = get_larger_matrix(&matrix_a, &matrix_b);
     int* temp_matrix_array = malloc(sizeof(int) * larger_matrix->height * larger_matrix->width);
     size_t used = 0;
-    for () // TODO: here
+     // TODO: here
     return NULL;
 }
 
@@ -181,3 +181,5 @@ Matrix *handle_subtraction(Matrix matrix_a, Matrix matrix_b)
     printf("Math");
     return NULL;
 }
+
+
