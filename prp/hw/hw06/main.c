@@ -35,10 +35,11 @@ int main(void)
     char sign = get_sign_from_input_remove_newlines();
     Matrix *matrix_b = get_matrix_from_input();
     // handle matrix arithmetics
-    Matrix *matrix_c = calculate_matrices(matrix_a, matrix_b, sign);
+    // Matrix *matrix_c = calculate_matrices(matrix_a, matrix_b, sign);
     // print matrix
     print_matrix(*matrix_a);
     print_matrix(*matrix_b);
+    printf("%i\n", get_matrix_value(matrix_a, 1,1));
 }
 
 Matrix *get_matrix_from_input()
@@ -182,4 +183,6 @@ Matrix *handle_subtraction(Matrix matrix_a, Matrix matrix_b)
     return NULL;
 }
 
-
+int get_matrix_value(Matrix* _target, size_t height, size_t width) {
+    return _target->array[height * _target->width + width];
+}
