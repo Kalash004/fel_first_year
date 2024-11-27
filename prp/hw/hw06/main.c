@@ -28,6 +28,8 @@ Matrix *handle_addition(Matrix matrix_a, Matrix matrix_b);
 
 Matrix *handle_subtraction(Matrix matrix_a, Matrix matrix_b);
 
+Matrix *create_matrix(size_t height, size_t width);
+
 int main(void)
 {
     Matrix *matrix_a = get_matrix_from_input();
@@ -35,11 +37,9 @@ int main(void)
     char sign = get_sign_from_input_remove_newlines();
     Matrix *matrix_b = get_matrix_from_input();
     // handle matrix arithmetics
-    // Matrix *matrix_c = calculate_matrices(matrix_a, matrix_b, sign);
+    Matrix *matrix_c = calculate_matrices(matrix_a, matrix_b, sign);
     // print matrix
-    print_matrix(*matrix_a);
-    print_matrix(*matrix_b);
-    printf("%i\n", get_matrix_value(matrix_a, 1,1));
+    print_matrix(*matrix_c);
 }
 
 Matrix *get_matrix_from_input()
@@ -163,26 +163,96 @@ void print_matrix(Matrix matrix)
 
 Matrix *handle_multiplication(Matrix matrix_a, Matrix matrix_b)
 {
-    Matrix *target = malloc(sizeof(Matrix) * 1);
-    Matrix* larger_matrix = get_larger_matrix(&matrix_a, &matrix_b);
-    int* temp_matrix_array = malloc(sizeof(int) * larger_matrix->height * larger_matrix->width);
-    size_t used = 0;
-     // TODO: here
-    return NULL;
+    if (matrix_a.width != matrix_b.height)
+    {
+        // TODO: handle
+        exit(1);
+    }
+    Matrix *target = create_matrix(matrix_a.height, matrix_b.width);
+    for (size_t row_a = 0; row_a < matrix_a.height; ++row_a)
+    {
+        for (size_t col_b = 0; col_b < matrix_b.width; ++col_b)
+        {
+            multiply_row_col(target, row_a, col_b, matrix_a, matrix_b);
+        }
+    }
+    return target;
+}
+
+void multiply_row_col(Matrix *target, size_t row_a, size_t col_b, Matrix source_a, Matrix source_b)
+{
+    int result = 0;
+    for (size_t width_a_height_b_index = 0; width_a_height_b_index < source_a.width; ++width_a_height_b_index)
+    {
+        int num_a = get_matrix_cell_value(source_a, row_a, width_a_height_b_index);
+        int num_b = get_matrix_cell_value(source_b, width_a_height_b_index, col_b);
+        result += num_a * num_b;
+    }
+    set_matrix_cell_value(target, row_a, col_b, result);
 }
 
 Matrix *handle_addition(Matrix matrix_a, Matrix matrix_b)
 {
-    printf("Math");
-    return NULL;
+    if (matrix_a.width != matrix_b.width || matrix_a.height != matrix_b.height)
+    {
+        // TODO: handle
+        exit(1);
+    }
+    Matrix *target = create_matrix(matrix_a.height, matrix_a.width);
+    for (size_t row = 0; row < matrix_a.height; ++row)
+    {
+        for (size_t col = 0; col < matrix_a.width; ++col)
+        {
+            int val_a = get_matrix_cell_value(matrix_a, row, col);
+            int val_b = get_matrix_cell_value(matrix_b, row, col);
+            int result = val_a + val_b;
+            set_matrix_cell_value(target, row, col, result);
+        }
+    }
+    return target;
 }
 
-Matrix *handle_subtraction(Matrix matrix_a, Matrix matrix_b)
+Matrix *handle_subtraction(Matrix matrix_a, Matrix matrix_b) // Its not DRY (dont repeat yourself), but we can live with that
 {
-    printf("Math");
-    return NULL;
+    if (matrix_a.width != matrix_b.width || matrix_a.height != matrix_b.height)
+    {
+        // TODO: handle
+        exit(1);
+    }
+    Matrix *target = create_matrix(matrix_a.height, matrix_a.width);
+    for (size_t row = 0; row < matrix_a.height; ++row)
+    {
+        for (size_t col = 0; col < matrix_a.width; ++col)
+        {
+            int val_a = get_matrix_cell_value(matrix_a, row, col);
+            int val_b = get_matrix_cell_value(matrix_b, row, col);
+            int result = val_a - val_b;
+            set_matrix_cell_value(target, row, col, result);
+        }
+    }
+    return target;
 }
 
-int get_matrix_value(Matrix* _target, size_t height, size_t width) {
-    return _target->array[height * _target->width + width];
+int get_matrix_cell_value(Matrix _target, size_t height, size_t width)
+{
+    return _target.array[height * _target.width + width];
+}
+
+void set_matrix_cell_value(Matrix *_target, size_t height, size_t width, int value)
+{
+    _target->array[height * _target->width + width] = value;
+}
+
+Matrix *create_matrix(size_t height, size_t width)
+{
+    Matrix *temp = malloc(sizeof(Matrix) * 1);
+    int *temp_matrix_array = malloc(sizeof(int) * height * width);
+    for (size_t foo = 0; foo < height * width; ++foo) // Set values of matrix to 0
+    {
+        temp_matrix_array[foo] = 0;
+    }
+    temp->array = temp_matrix_array;
+    temp->height = height;
+    temp->width = width;
+    return temp;
 }
