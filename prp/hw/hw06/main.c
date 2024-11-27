@@ -162,7 +162,11 @@ void print_matrix(Matrix matrix)
 
 Matrix *handle_multiplication(Matrix matrix_a, Matrix matrix_b)
 {
-    printf("Math");
+    Matrix *target = malloc(sizeof(Matrix) * 1);
+    Matrix* larger_matrix = get_larger_matrix(&matrix_a, &matrix_b);
+    int* temp_matrix_array = malloc(sizeof(int) * larger_matrix->height * larger_matrix->width);
+    size_t used = 0;
+    for () // TODO: here
     return NULL;
 }
 
