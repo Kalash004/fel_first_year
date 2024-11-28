@@ -1,4 +1,4 @@
-// --------------------- UTILS --------------------------------
+// ----------------- Error handling -------------------------------------
 #ifndef STDIOH
 #define STDIOH
 #include <stdio.h>
@@ -23,45 +23,69 @@
 
 typedef struct
 {
-    void *first_cell;
-    int array_length;
-    int element_size;
-} Array;
-
-int is_char_in_array(char c, int arr_size, char arr[]);
-
-int is_char_in_array(char c, int arr_size, char arr[])
+    int code;
+    char *message;
+} SError;
+typedef enum
 {
-    for (int i = 0; i < arr_size; ++i)
-    {
-        if (c == arr[i])
-            return TRUE;
-    }
-    return FALSE;
-}
-void shift_array_left(int shift_index, Array *arr);
-
-void shift_array_left(int shift_index, Array *arr)
+    UNKNOWN_ERROR_CODE,
+    END
+} EError_codes;
+SError errors[] = {
+    {.code = -1, .message = "Error: Unknown error code: %d"},
+};
+void handle_fatal_error(int code);
+void handle_non_fatal_error(int code);
+void print_error_message(int code);
+void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size);
+int get_error_output_code(int code);
+/// @brief Same as handle_non_fatal_error but exits the program at the end
+/// @param code Error code number
+void handle_fatal_error(int code)
 {
-    int used = 0;
-    void *first_cell = arr->first_cell;
-    int arr_last_index = arr->array_length - 1;
-    int element_size = arr->element_size;
-    for (int i = 0; i < arr_last_index; ++i)
+    print_error_message(code);
+    int err_code = get_error_output_code(code);
+    exit(err_code);
+}
+/// @brief Finds error code, and prints it
+/// @param code Error code number
+void handle_non_fatal_error(int code)
+{
+    print_error_message(code);
+}
+/// @brief Prints error message from char *error_messages[]
+/// @param code Error code number
+void print_error_message(int code)
+{
+    char buffer[100];
+    get_error_code_to_message(code, &buffer[0], 100);
+    fprintf(stderr, "%s\n", buffer);
+}
+/// @brief Goes thru SError errors[] and finds error by code. If doesnt exist returns Unknown error code
+/// @param code int: Error code number
+/// @param buffer char[]: Buffer to place message to
+/// @param buffer_size int: Size of the buffer
+void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size)
+{
+    SError error;
+    if (code > END)
     {
-        if (i < shift_index)
-        {
-            continue;
-        }
-        memcpy((char *)first_cell + element_size * used, (char *)first_cell + element_size * i, element_size); // 
-        ++used;
+        error = errors[UNKNOWN_ERROR_CODE];
+        snprintf(buffer, buffer_size, error.message, code);
+        return;
     }
-    arr->array_length = used + 1;
+    error = errors[code];
+    snprintf(buffer, buffer_size, "%s", error.message);
+    return;
 }
-
-int get_min(int num1, int num2) {
-    if (num1 > num2)
-        return num1;
-    return num2;
+int get_error_output_code(int code)
+{
+    SError error;
+    if (code > END)
+    {
+        error = errors[UNKNOWN_ERROR_CODE];
+        return error.code;
+    }
+    return errors[code].code;
 }
-// --------------------- UTILS --------------------------------
+// ----------------- Error handling -------------------------------------
