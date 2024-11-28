@@ -64,7 +64,7 @@ void print_error_message(int code)
 {
     char buffer[100];
     get_error_code_to_message(code, &buffer[0], 100);
-    fprintf(stderr, "%s\n", buffer);
+    printf("%s\n", buffer);
 }
 /// @brief Goes thru SError errors[] and finds error by code. If doesnt exist returns Unknown error code
 /// @param code int: Error code number
@@ -94,7 +94,6 @@ int get_error_output_code(int code)
     return errors[code].code;
 }
 // ----------------- Error handling -------------------------------------
-#define BUFFER_INIT_SIZE 10
 
 typedef struct
 {
@@ -103,41 +102,11 @@ typedef struct
     int *array; // 1d array
 } Matrix;
 
-// typedef struct
-// {
-//     Identifiable_matrix *a;
-//     Identifiable_matrix *b;
-//     char operation;
-
-// } Operation;
-
-// typedef struct
-// {
-//     size_t matrix_a_id;
-//     Matrix *pointer;
-// } Identifiable_matrix;
-
-typedef struct
-{
-    Matrix *m;
-    char operation;
-} Matrix_and_operation;
-
-int handle_mandatory();
-
-int handle_multiple_matrices();
-
-Matrix multiply_until_hit_other_operation(size_t *i, Matrix_and_operation *operations, size_t length);
-
-Matrix_and_operation get_next(size_t i, Matrix_and_operation *arr);
-
-Matrix_and_operation *read_create_operation_buffer(size_t *len_target);
-
 Matrix *get_matrix_from_input();
 
 int get_matrix_size(size_t *width, size_t *height);
 
-int load_data_from_input_to_array(int *matrix_array, size_t height, size_t width);
+void load_data_from_input_to_array(int *matrix_array, size_t height, size_t width);
 
 void free_matrix(Matrix *__target);
 
@@ -163,113 +132,14 @@ Matrix *create_matrix(size_t height, size_t width);
 
 int main(void)
 {
-    return handle_multiple_matrices();
-}
-
-int handle_mandatory()
-{
     Matrix *matrix_a = get_matrix_from_input();
-    if (matrix_a == NULL)
-    {
-        handle_fatal_error(BAD_INPUT_ERR_CODE);
-    }
     // obtain sign
     char sign = get_sign_from_input_remove_newlines();
     Matrix *matrix_b = get_matrix_from_input();
-    if (matrix_a == NULL)
-    {
-        free(matrix_a);
-        handle_fatal_error(BAD_INPUT_ERR_CODE);
-    }
     // handle matrix arithmetics
     Matrix *matrix_c = calculate_matrices(matrix_a, matrix_b, sign);
     // print matrix
     print_matrix(*matrix_c);
-    // cleanup
-    free_matrix(matrix_a);
-    free_matrix(matrix_b);
-    free_matrix(matrix_c);
-    return 0;
-}
-
-int handle_multiple_matrices()
-{
-    size_t buffer_length = 0;
-    Matrix_and_operation *operations = read_create_operation_buffer(&buffer_length);
-    Matrix result = *operations[0].m;
-    char current_operation = operations[0].operation;
-    for (size_t i = 0; i < buffer_length - 1; ++i)
-    {
-        Matrix_and_operation next = get_next(i, operations);
-        if (next.operation == '*')
-        {
-            size_t skip = i;
-            Matrix multiplication_result = multiply_until_hit_other_operation(&skip, operations, buffer_length);
-            Matrix *temp = calculate_matrices(&result, &multiplication_result, current_operation);
-            result = *temp;
-            free(temp);
-            i = skip;
-            current_operation = operations[i].operation;
-        }
-        else
-        { // other operations
-            Matrix *temp = calculate_matrices(&result, next.m, current_operation);
-            result = *temp;
-            free(temp);
-            current_operation = next.operation;
-        }
-    }
-    printf("\n");
-    print_matrix(result);
-    return 0;
-}
-
-Matrix multiply_until_hit_other_operation(size_t *i, Matrix_and_operation *operations, size_t length)
-{
-    ++*i; // move to the next cell
-    Matrix result = *operations[*i].m;
-    char operation = operations[*i].operation;
-    while (operation == '*' && *i < length - 1)
-    {
-        ++*i;
-        Matrix_and_operation next = get_next(*i, operations);
-        result = *handle_multiplication(result, *next.m);
-        operation = next.operation;
-    }
-    return result;
-}
-
-Matrix_and_operation get_next(size_t i, Matrix_and_operation *arr)
-{
-    return arr[i + 1];
-}
-
-Matrix_and_operation *read_create_operation_buffer(size_t *len_target)
-{
-    size_t current_size = BUFFER_INIT_SIZE;
-    size_t used = 0;
-    Matrix_and_operation *action_buffer = malloc(current_size * sizeof(Matrix_and_operation));
-
-    while (1)
-    {
-        if (used == current_size)
-        {
-            // TODO: make safe realloc and malloc
-            current_size *= current_size;
-            action_buffer = realloc(action_buffer, current_size);
-        }
-        // obtain data
-        Matrix *m = get_matrix_from_input();
-        char operation = get_sign_from_input_remove_newlines();
-        action_buffer[used].m = m;
-        action_buffer[used].operation = operation;
-        ++used;
-        if (operation == ' ') {
-            break;
-        }
-    }
-    *len_target = used;
-    return action_buffer;
 }
 
 Matrix *get_matrix_from_input()
@@ -281,19 +151,12 @@ Matrix *get_matrix_from_input()
     int read_result = get_matrix_size(&width, &height);
     if (read_result)
     {
-        free(temp);
-        return NULL;
+        handle_fatal_error(BAD_INPUT_ERR_CODE);
     }
     // create matrix_a array
     int *matrix_arr = malloc(sizeof(int) * (width * height));
     // obtain matrix_a data
-    int data_read_result = load_data_from_input_to_array(matrix_arr, height, width);
-    if (data_read_result)
-    {
-        free(matrix_arr);
-        free(temp);
-        return NULL;
-    }
+    load_data_from_input_to_array(matrix_arr, height, width);
     temp->width = width;
     temp->height = height;
     temp->array = matrix_arr;
@@ -314,7 +177,7 @@ int get_matrix_size(size_t *width, size_t *height)
     return 0;
 }
 
-int load_data_from_input_to_array(int *matrix_array, size_t height, size_t width)
+void load_data_from_input_to_array(int *matrix_array, size_t height, size_t width)
 {
     size_t matrix_arr_index = 0;
     for (size_t h = 0; h < height; ++h)
@@ -324,14 +187,11 @@ int load_data_from_input_to_array(int *matrix_array, size_t height, size_t width
             int temp;
             if (w == width - 1)
             {
-                scanf("%i", &temp); // if last in row dont scanf space
-                if (h != height - 1)
+                scanf("%i", &temp);       // if last in row dont scanf space
+                char garbage = getchar();
+                if (garbage != EOF && garbage != '\n')
                 {
-                    char garbage = getchar();
-                    if (garbage != EOF && garbage != '\n')
-                    {
-                        return BAD_INPUT_ERR_CODE;
-                    }
+                    handle_fatal_error(BAD_INPUT_ERR_CODE);
                 }
             }
             else
@@ -342,7 +202,6 @@ int load_data_from_input_to_array(int *matrix_array, size_t height, size_t width
             ++matrix_arr_index;
         }
     }
-    return 0;
 }
 
 void free_matrix(Matrix *__target)
@@ -353,11 +212,7 @@ void free_matrix(Matrix *__target)
 
 char get_sign_from_input_remove_newlines()
 {
-    char test_eof = getchar();
-    if (test_eof == EOF)
-    {
-        return ' ';
-    }
+    scanf("\n");
     char c = getchar();
     scanf("\n");
     return c;
