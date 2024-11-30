@@ -203,7 +203,8 @@ int handle_multiple_matrices()
 {
     size_t buffer_length = 0;
     Matrix_and_operation *operations = read_create_operation_buffer(&buffer_length);
-    if (operations == NULL) {
+    if (operations == NULL)
+    {
         handle_fatal_error(BAD_INPUT_ERR_CODE);
     }
     Matrix result = *operations[0].m;
@@ -220,6 +221,7 @@ int handle_multiple_matrices()
             free(temp);
             i = skip;
             current_operation = operations[i].operation;
+            --i;
         }
         else
         { // other operations
@@ -230,7 +232,6 @@ int handle_multiple_matrices()
             current_operation = next.operation;
         }
     }
-    printf("\n");
     print_matrix(result);
     return 0;
 }
@@ -242,10 +243,10 @@ Matrix multiply_until_hit_other_operation(size_t *i, Matrix_and_operation *opera
     char operation = operations[*i].operation;
     while (operation == '*' && *i < length - 1)
     {
-        ++*i;
         Matrix_and_operation next = get_next(*i, operations);
         result = *handle_multiplication(result, *next.m);
         operation = next.operation;
+        ++*i;
     }
     return result;
 }
@@ -271,8 +272,10 @@ Matrix_and_operation *read_create_operation_buffer(size_t *len_target)
         }
         // obtain data
         Matrix *m = get_matrix_from_input();
-        if (m == NULL) {
-            for (int i = used; i >= 0; --i) {
+        if (m == NULL)
+        {
+            for (int i = used; i >= 0; --i)
+            {
                 Matrix_and_operation temp = action_buffer[i];
                 free(temp.m);
             }
@@ -396,7 +399,7 @@ int contains_non_numbers(char *str) // flawed -
     do
     {
         c = str[i];
-        if (c != ' ' && c != '-')
+        if (c != ' ' && c != '-' && c != '\0')
         {
             if (!isdigit(c))
                 return 0;
