@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 // ----------------- Error handling -------------------------------------
 #ifndef STDIOH
@@ -139,6 +140,12 @@ int get_matrix_size(size_t *width, size_t *height);
 
 int load_data_from_input_to_array(int *matrix_array, size_t height, size_t width);
 
+int get_next_int_from_str(char *str, int restart);
+
+int contains_non_numbers(char *str);
+
+char *read_line();
+
 void free_matrix(Matrix *__target);
 
 char get_sign_from_input_remove_newlines();
@@ -196,6 +203,9 @@ int handle_multiple_matrices()
 {
     size_t buffer_length = 0;
     Matrix_and_operation *operations = read_create_operation_buffer(&buffer_length);
+    if (operations == NULL) {
+        handle_fatal_error(BAD_INPUT_ERR_CODE);
+    }
     Matrix result = *operations[0].m;
     char current_operation = operations[0].operation;
     for (size_t i = 0; i < buffer_length - 1; ++i)
@@ -214,6 +224,7 @@ int handle_multiple_matrices()
         else
         { // other operations
             Matrix *temp = calculate_matrices(&result, next.m, current_operation);
+            free(result.array);
             result = *temp;
             free(temp);
             current_operation = next.operation;
@@ -260,11 +271,22 @@ Matrix_and_operation *read_create_operation_buffer(size_t *len_target)
         }
         // obtain data
         Matrix *m = get_matrix_from_input();
+        if (m == NULL) {
+            for (int i = used; i >= 0; --i) {
+                Matrix_and_operation temp = action_buffer[i];
+                free(temp.m);
+            }
+            free(action_buffer);
+            return NULL;
+        }
         char operation = get_sign_from_input_remove_newlines();
+        if (operation == EOF)
+            operation = ' ';
         action_buffer[used].m = m;
         action_buffer[used].operation = operation;
         ++used;
-        if (operation == ' ') {
+        if (operation == ' ')
+        {
             break;
         }
     }
@@ -279,6 +301,7 @@ Matrix *get_matrix_from_input()
     size_t width = 0;
     size_t height = 0;
     int read_result = get_matrix_size(&width, &height);
+    scanf("\n");
     if (read_result)
     {
         free(temp);
@@ -319,30 +342,94 @@ int load_data_from_input_to_array(int *matrix_array, size_t height, size_t width
     size_t matrix_arr_index = 0;
     for (size_t h = 0; h < height; ++h)
     {
+        char *line = read_line();
+        if (!contains_non_numbers(line))
+        {
+            return 1;
+        }
         for (size_t w = 0; w < width; ++w)
         {
-            int temp;
-            if (w == width - 1)
-            {
-                scanf("%i", &temp); // if last in row dont scanf space
-                if (h != height - 1)
-                {
-                    char garbage = getchar();
-                    if (garbage != EOF && garbage != '\n')
-                    {
-                        return BAD_INPUT_ERR_CODE;
-                    }
-                }
-            }
-            else
-            {
-                scanf("%i ", &temp); // otherwise do scan space
-            }
+            int restart_flag = 0;
+            if (w == 0)
+                restart_flag = 1;
+            int temp = get_next_int_from_str(line, restart_flag);
             matrix_array[matrix_arr_index] = temp;
             ++matrix_arr_index;
         }
     }
     return 0;
+}
+
+int get_next_int_from_str(char *str, int restart)
+{
+    static size_t id;
+    if (restart)
+    {
+        id = 0;
+    }
+    char c;
+    char number[11] = {0};
+    size_t used = 0;
+    do
+    {
+        c = str[id];
+        if (c == '-' || isdigit(c))
+        {
+            number[used] = c;
+            ++used;
+            ++id;
+            continue;
+        }
+        if (used > 0 && !isdigit(c))
+            break;
+        ++id;
+    } while (c != '\0');
+    int target;
+    sscanf(number, "%i", &target);
+    return target;
+}
+
+int contains_non_numbers(char *str) // flawed -
+{
+    size_t i = 0;
+    char c;
+    do
+    {
+        c = str[i];
+        if (c != ' ' && c != '-')
+        {
+            if (!isdigit(c))
+                return 0;
+        }
+        ++i;
+    } while (c != '\0');
+    return 1;
+}
+
+char *read_line()
+{
+    size_t buff_size = 10;
+    size_t used = 0;
+    char *buffer = malloc(buff_size * sizeof(char));
+
+    char c;
+    do
+    {
+        if (used == buff_size - 1)
+        {
+            buff_size += 10;
+            buffer = realloc(buffer, buff_size);
+        }
+        c = getchar();
+        if (c == EOF || c == '\n')
+        {
+            buffer[used] = '\0';
+            break;
+        }
+        buffer[used] = c;
+        ++used;
+    } while (c != EOF && c != '\n');
+    return buffer;
 }
 
 void free_matrix(Matrix *__target)
@@ -354,13 +441,9 @@ void free_matrix(Matrix *__target)
 char get_sign_from_input_remove_newlines()
 {
     char test_eof = getchar();
-    if (test_eof == EOF)
-    {
-        return ' ';
-    }
-    char c = getchar();
-    scanf("\n");
-    return c;
+    if (test_eof != EOF)
+        scanf("\n");
+    return test_eof;
 }
 
 Matrix *calculate_matrices(Matrix *matrix_a, Matrix *matrix_b, char sign)
