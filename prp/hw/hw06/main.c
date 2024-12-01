@@ -34,12 +34,13 @@ typedef enum
 {
     UNKNOWN_ERROR_CODE,
     BAD_INPUT_ERR_CODE,
+    BAD_MALLOC_CODE,
     END
 } EError_codes;
 SError errors[] = {
     {.code = -1, .message = "Error: Unknown error code: %d"},
     {.code = 100, .message = "Error: Chybny vstup!"},
-};
+    {.code = 10101, .message = "Error: Malloc didnt work as intended but program still continued"}};
 void handle_fatal_error(int code);
 void handle_non_fatal_error(int code);
 void print_error_message(int code);
@@ -96,6 +97,11 @@ int get_error_output_code(int code)
 }
 // ----------------- Error handling -------------------------------------
 #define BUFFER_INIT_SIZE 10
+#define MALLOCED_OJB_ARR_SIZE 1000
+
+void **Objects_to_free;
+size_t size_objects_to_free = 0;
+size_t used_object_to_free_id = 0;
 
 typedef struct
 {
@@ -104,99 +110,74 @@ typedef struct
     int *array; // 1d array
 } Matrix;
 
-// typedef struct
-// {
-//     Identifiable_matrix *a;
-//     Identifiable_matrix *b;
-//     char operation;
-
-// } Operation;
-
-// typedef struct
-// {
-//     size_t matrix_a_id;
-//     Matrix *pointer;
-// } Identifiable_matrix;
-
 typedef struct
 {
     Matrix *m;
     char operation;
 } Matrix_and_operation;
 
-int handle_mandatory();
+int handle_multiple_matrices(); // used
 
-int handle_multiple_matrices();
+Matrix multiply_until_hit_other_operation(size_t *i, Matrix_and_operation *operations, size_t length); // used
 
-Matrix multiply_until_hit_other_operation(size_t *i, Matrix_and_operation *operations, size_t length);
+Matrix_and_operation get_next_matrix_and_operation(size_t i, Matrix_and_operation *arr); // used
 
-Matrix_and_operation get_next(size_t i, Matrix_and_operation *arr);
+Matrix_and_operation *read_create_operation_buffer(size_t *len_target); // used
 
-Matrix_and_operation *read_create_operation_buffer(size_t *len_target);
+Matrix *get_matrix_from_input(); // used
 
-Matrix *get_matrix_from_input();
+int get_matrix_size(size_t *width, size_t *height); // used
 
-int get_matrix_size(size_t *width, size_t *height);
+int load_data_from_input_to_array(int *matrix_array, size_t height, size_t width); // used
 
-int load_data_from_input_to_array(int *matrix_array, size_t height, size_t width);
+int get_next_int_from_str(char *str, int restart); // used
 
-int get_next_int_from_str(char *str, int restart);
+int contains_non_numbers(char *str); // used
 
-int contains_non_numbers(char *str);
+char *read_line(); // used
 
-char *read_line();
+char get_sign_from_input_remove_newlines(); // used
 
-void free_matrix(Matrix *__target);
+Matrix *calculate_matrices(Matrix *matrix_a, Matrix *matrix_b, char sign); // used
 
-char get_sign_from_input_remove_newlines();
+void print_matrix(Matrix matrix); // used
 
-Matrix *calculate_matrices(Matrix *matrix_a, Matrix *matrix_b, char sign);
+Matrix *handle_multiplication(Matrix matrix_a, Matrix matrix_b); // used
 
-void print_matrix(Matrix matrix);
+void multiply_row_col(Matrix *target, size_t row_a, size_t col_b, Matrix source_a, Matrix source_b); // used
 
-Matrix *handle_multiplication(Matrix matrix_a, Matrix matrix_b);
+Matrix *handle_addition(Matrix matrix_a, Matrix matrix_b); // used
 
-void multiply_row_col(Matrix *target, size_t row_a, size_t col_b, Matrix source_a, Matrix source_b);
+Matrix *handle_subtraction(Matrix matrix_a, Matrix matrix_b); // used
 
-Matrix *handle_addition(Matrix matrix_a, Matrix matrix_b);
+int get_matrix_cell_value(Matrix _target, size_t height, size_t width); // used
 
-Matrix *handle_subtraction(Matrix matrix_a, Matrix matrix_b);
+void set_matrix_cell_value(Matrix *_target, size_t height, size_t width, int value); // used
 
-int get_matrix_cell_value(Matrix _target, size_t height, size_t width);
+Matrix *create_matrix(size_t height, size_t width); // used
 
-void set_matrix_cell_value(Matrix *_target, size_t height, size_t width, int value);
+/// @brief Uses malloc to get pointer for heap, creates an entry into Objects_to_free and saves pointer there
+/// @param size Size of object
+/// @return Pointer
+void *handled_malloc(size_t size);
 
-Matrix *create_matrix(size_t height, size_t width);
+/// @brief Looks for source in Objects_to_free to get the id, reallocs and saves new pointer to Objects_to_free
+/// @param source Pointer to realloc
+/// @param size Size of new malloc
+/// @return New pointer
+void *handled_realloc(void *source, size_t size);
+
+/// @brief Finds entry in array
+/// @param source
+/// @return
+size_t find_malloced_obj_id(void *source);
+
+/// @brief Frees objects in Objects_to_free
+void free_objects();
 
 int main(void)
 {
     return handle_multiple_matrices();
-}
-
-int handle_mandatory()
-{
-    Matrix *matrix_a = get_matrix_from_input();
-    if (matrix_a == NULL)
-    {
-        handle_fatal_error(BAD_INPUT_ERR_CODE);
-    }
-    // obtain sign
-    char sign = get_sign_from_input_remove_newlines();
-    Matrix *matrix_b = get_matrix_from_input();
-    if (matrix_a == NULL)
-    {
-        free(matrix_a);
-        handle_fatal_error(BAD_INPUT_ERR_CODE);
-    }
-    // handle matrix arithmetics
-    Matrix *matrix_c = calculate_matrices(matrix_a, matrix_b, sign);
-    // print matrix
-    print_matrix(*matrix_c);
-    // cleanup
-    free_matrix(matrix_a);
-    free_matrix(matrix_b);
-    free_matrix(matrix_c);
-    return 0;
 }
 
 int handle_multiple_matrices()
@@ -205,20 +186,22 @@ int handle_multiple_matrices()
     Matrix_and_operation *operations = read_create_operation_buffer(&buffer_length);
     if (operations == NULL)
     {
+        free_objects();
         handle_fatal_error(BAD_INPUT_ERR_CODE);
     }
     Matrix result = *operations[0].m;
     char current_operation = operations[0].operation;
     for (size_t i = 0; i < buffer_length - 1; ++i)
     {
-        Matrix_and_operation next = get_next(i, operations);
+        Matrix_and_operation next = get_next_matrix_and_operation(i, operations);
         if (next.operation == '*')
         {
             size_t skip = i;
             Matrix multiplication_result = multiply_until_hit_other_operation(&skip, operations, buffer_length);
             Matrix *temp = calculate_matrices(&result, &multiplication_result, current_operation);
+            // printf("\nOther_res:\n");
+            // print_matrix(*temp);
             result = *temp;
-            free(temp);
             i = skip;
             current_operation = operations[i].operation;
             --i;
@@ -226,13 +209,12 @@ int handle_multiple_matrices()
         else
         { // other operations
             Matrix *temp = calculate_matrices(&result, next.m, current_operation);
-            free(result.array);
             result = *temp;
-            free(temp);
             current_operation = next.operation;
         }
     }
     print_matrix(result);
+    free_objects();
     return 0;
 }
 
@@ -243,7 +225,7 @@ Matrix multiply_until_hit_other_operation(size_t *i, Matrix_and_operation *opera
     char operation = operations[*i].operation;
     while (operation == '*' && *i < length - 1)
     {
-        Matrix_and_operation next = get_next(*i, operations);
+        Matrix_and_operation next = get_next_matrix_and_operation(*i, operations);
         result = *handle_multiplication(result, *next.m);
         operation = next.operation;
         ++*i;
@@ -251,7 +233,7 @@ Matrix multiply_until_hit_other_operation(size_t *i, Matrix_and_operation *opera
     return result;
 }
 
-Matrix_and_operation get_next(size_t i, Matrix_and_operation *arr)
+Matrix_and_operation get_next_matrix_and_operation(size_t i, Matrix_and_operation *arr)
 {
     return arr[i + 1];
 }
@@ -260,26 +242,19 @@ Matrix_and_operation *read_create_operation_buffer(size_t *len_target)
 {
     size_t current_size = BUFFER_INIT_SIZE;
     size_t used = 0;
-    Matrix_and_operation *action_buffer = malloc(current_size * sizeof(Matrix_and_operation));
+    Matrix_and_operation *action_buffer = handled_malloc(current_size * sizeof(Matrix_and_operation));
 
     while (1)
     {
-        if (used == current_size)
+        if (used == current_size - 2)
         {
-            // TODO: make safe realloc and malloc
-            current_size *= current_size;
-            action_buffer = realloc(action_buffer, current_size);
+            current_size *= 2;
+            action_buffer = handled_realloc(action_buffer, current_size * sizeof(Matrix_and_operation));
         }
         // obtain data
         Matrix *m = get_matrix_from_input();
         if (m == NULL)
         {
-            for (int i = used; i >= 0; --i)
-            {
-                Matrix_and_operation temp = action_buffer[i];
-                free(temp.m);
-            }
-            free(action_buffer);
             return NULL;
         }
         char operation = get_sign_from_input_remove_newlines();
@@ -300,24 +275,21 @@ Matrix_and_operation *read_create_operation_buffer(size_t *len_target)
 Matrix *get_matrix_from_input()
 {
     // obtain matrix_a size
-    Matrix *temp = malloc(sizeof(Matrix) * 1);
+    Matrix *temp = handled_malloc(sizeof(Matrix) * 1);
     size_t width = 0;
     size_t height = 0;
     int read_result = get_matrix_size(&width, &height);
     scanf("\n");
     if (read_result)
     {
-        free(temp);
         return NULL;
     }
     // create matrix_a array
-    int *matrix_arr = malloc(sizeof(int) * (width * height));
+    int *matrix_arr = handled_malloc(sizeof(int) * (width * height));
     // obtain matrix_a data
     int data_read_result = load_data_from_input_to_array(matrix_arr, height, width);
     if (data_read_result)
     {
-        free(matrix_arr);
-        free(temp);
         return NULL;
     }
     temp->width = width;
@@ -413,15 +385,14 @@ char *read_line()
 {
     size_t buff_size = 10;
     size_t used = 0;
-    char *buffer = malloc(buff_size * sizeof(char));
-
+    char *buffer = handled_malloc(buff_size * sizeof(char));
     char c;
     do
     {
         if (used == buff_size - 1)
         {
             buff_size += 10;
-            buffer = realloc(buffer, buff_size);
+            buffer = handled_realloc(buffer, buff_size);
         }
         c = getchar();
         if (c == EOF || c == '\n')
@@ -433,12 +404,6 @@ char *read_line()
         ++used;
     } while (c != EOF && c != '\n');
     return buffer;
-}
-
-void free_matrix(Matrix *__target)
-{
-    free(__target->array);
-    free(__target);
 }
 
 char get_sign_from_input_remove_newlines()
@@ -493,6 +458,7 @@ Matrix *handle_multiplication(Matrix matrix_a, Matrix matrix_b)
 {
     if (matrix_a.width != matrix_b.height)
     {
+        free_objects();
         handle_fatal_error(BAD_INPUT_ERR_CODE);
     }
     Matrix *target = create_matrix(matrix_a.height, matrix_b.width);
@@ -522,6 +488,7 @@ Matrix *handle_addition(Matrix matrix_a, Matrix matrix_b)
 {
     if (matrix_a.width != matrix_b.width || matrix_a.height != matrix_b.height)
     {
+        free_objects();
         handle_fatal_error(BAD_INPUT_ERR_CODE);
     }
     Matrix *target = create_matrix(matrix_a.height, matrix_a.width);
@@ -542,7 +509,9 @@ Matrix *handle_subtraction(Matrix matrix_a, Matrix matrix_b) // Its not DRY (don
 {
     if (matrix_a.width != matrix_b.width || matrix_a.height != matrix_b.height)
     {
+        free_objects();
         handle_fatal_error(BAD_INPUT_ERR_CODE);
+        return NULL;
     }
     Matrix *target = create_matrix(matrix_a.height, matrix_a.width);
     for (size_t row = 0; row < matrix_a.height; ++row)
@@ -570,8 +539,8 @@ void set_matrix_cell_value(Matrix *_target, size_t height, size_t width, int val
 
 Matrix *create_matrix(size_t height, size_t width)
 {
-    Matrix *temp = malloc(sizeof(Matrix) * 1);
-    int *temp_matrix_array = malloc(sizeof(int) * height * width);
+    Matrix *temp = handled_malloc(sizeof(Matrix) * 1);
+    int *temp_matrix_array = handled_malloc(sizeof(int) * height * width);
     for (size_t foo = 0; foo < height * width; ++foo) // Set values of matrix to 0
     {
         temp_matrix_array[foo] = 0;
@@ -580,4 +549,71 @@ Matrix *create_matrix(size_t height, size_t width)
     temp->height = height;
     temp->width = width;
     return temp;
+}
+
+void *handled_malloc(size_t size)
+{
+    if (size_objects_to_free == 0)
+    {
+        size_objects_to_free = MALLOCED_OJB_ARR_SIZE;
+        void **temp = malloc(sizeof(void *) * size_objects_to_free);
+        if (temp == NULL)
+        {
+            handle_non_fatal_error(BAD_MALLOC_CODE);
+            return NULL;
+        }
+        Objects_to_free = temp;
+    }
+    if (size_objects_to_free < used_object_to_free_id + 2)
+    {
+        size_objects_to_free *= 2;
+        void **temp = realloc(Objects_to_free, size_objects_to_free * sizeof(void *));
+        if (temp == NULL)
+        {
+            handle_non_fatal_error(BAD_MALLOC_CODE);
+            return NULL;
+        }
+        Objects_to_free = temp;
+    }
+    void *temp = malloc(size);
+    if (temp == NULL)
+    {
+        handle_non_fatal_error(BAD_MALLOC_CODE);
+        return NULL;
+    }
+    Objects_to_free[used_object_to_free_id] = temp;
+    ++used_object_to_free_id;
+    return temp;
+}
+
+void *handled_realloc(void *source, size_t size)
+{
+    size_t obj_id = find_malloced_obj_id(source);
+    void *temp = realloc(source, size);
+    if (temp == NULL)
+    {
+        free(source); // possible data loss
+        handle_non_fatal_error(BAD_MALLOC_CODE);
+    }
+    Objects_to_free[obj_id] = temp;
+    return temp;
+}
+
+size_t find_malloced_obj_id(void *source)
+{
+    for (size_t i = 0; i < MALLOCED_OJB_ARR_SIZE; ++i)
+    {
+        if (source == Objects_to_free[i])
+            return i;
+    }
+    return MALLOCED_OJB_ARR_SIZE; // TODO: check for problems
+}
+
+void free_objects()
+{
+    for (size_t i = 0; i < used_object_to_free_id; ++i)
+    {
+        free(Objects_to_free[i]);
+    }
+    free(Objects_to_free);
 }
