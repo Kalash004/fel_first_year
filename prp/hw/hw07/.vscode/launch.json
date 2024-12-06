@@ -8,7 +8,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/a.out",
-        "args": ["clever", "./test.txt"],
+        "args": ["-E" ,"colou?r", "./test.txt"],
         "stopAtEntry": false,
         "cwd": "${fileDirname}",
         "environment": [],

@@ -199,14 +199,40 @@ int get_error_output_code(int code)
     return errors[code].code;
 }
 // ----------------- Error handling -------------------------------------
+typedef struct
+{
+    int regex;
+    int color;
+    const char *filepath;
+    FILE *f;
+    const char *pattern;
+} Options;
 
 int no_options_handler(char **argv);
 
 int no_filepath_handler(char **argv);
 
-size_t find_write_needed_lines(const char *pattern, char **lines, size_t lines_count);
+int main_handler(Options *args);
+
+void open_file_or_stdin(Options *args);
+
+Options *parse_args(int argc, char **argv);
+
+void parse_option(Options *target, char *option);
+
+size_t find_pattern_write_needed_lines_no_color(const char *pattern, char **lines, size_t lines_count);
+
+size_t find_pattern_write_needed_lines_colored(const char *pattern, char **lines, size_t lines_count);
+
+size_t find_regex_write_needed_lines_no_colored(const char *pattern, char **lines, size_t lines_count);
+
+size_t find_regex_write_needed_lines_colored(const char *pattern, char **lines, size_t lines_count);
 
 int pattern_in_str(const char *pattern, char *str);
+
+int regex_in_str(const char *regex, char *str);
+
+void print_colored(char *line, const char *pattern);
 
 char **get_lines(FILE *f, size_t *line_count);
 
@@ -216,43 +242,107 @@ char get_end_char_of_str(char *target);
 
 int basic_handler(FILE *f, const char *pattern);
 
-typedef struct
-{
-    
-} Options;
-
 int main(int argc, char **argv)
 {
     // Parse arguments
+    Options *args = parse_args(argc, argv);
     // find file
-}
-
-int no_options_handler(char **argv)
-{
-    // get pattern
-    const char *pattern = argv[1];
-    // get file path
-    const char *file_path = argv[2];
-    // open file
-    FILE *f = fopen(file_path, "r");
-    if (f == NULL)
-        handle_fatal_error(FILE_WASNT_OPENNED);
-    // save lines to array
-    int res = basic_handler(f, pattern);
-    fclose(f);
+    open_file_or_stdin(args);
+    int res = main_handler(args);
     free_objects();
     return res;
 }
 
-int no_filepath_handler(char **argv)
+int main_handler(Options *args)
 {
-    const char *pattern = argv[1];
-    int res = basic_handler(stdin, pattern);
-    free_objects();
-    return res;
+    size_t lines_count = 0;
+    char **lines = get_lines(args->f, &lines_count);
+    size_t read = 0;
+    if (args->color == 1 && args->regex == 1)
+    {
+        read = find_regex_write_needed_lines_colored(args->pattern, lines, lines_count);
+    }
+    if (args->color == 0 && args->regex == 1)
+    {
+        read = find_regex_write_needed_lines_no_colored(args->pattern, lines, lines_count);
+    }
+    if (args->color == 1 && args->regex == 0)
+    {
+        read = find_pattern_write_needed_lines_colored(args->pattern, lines, lines_count);
+    }
+    if (args->color == 0 && args->regex == 0)
+    {
+        read = find_pattern_write_needed_lines_no_color(args->pattern, lines, lines_count);
+    }
+    if (read < 1)
+    {
+        return 1;
+    }
+    return 0;
 }
 
-size_t find_write_needed_lines(const char *pattern, char **lines, size_t lines_count)
+void open_file_or_stdin(Options *args)
+{
+    FILE *f;
+    if (args->filepath == NULL)
+    {
+        f = stdin;
+    }
+    else
+    {
+        f = fopen(args->filepath, "r");
+    }
+    args->f = f;
+}
+
+Options *parse_args(int argc, char **argv)
+{
+    Options *target = handled_malloc(1 * sizeof(Options));
+    target->color = 0;
+    target->regex = 0;
+    target->filepath = NULL;
+    target->f = NULL;
+    target->pattern = NULL;
+
+    size_t must_arguments = 0;
+    for (int i = 1; i < argc; ++i)
+    {
+        char *option = argv[i];
+        if (option[0] == '-')
+        {
+            parse_option(target, option);
+            continue;
+        }
+        ++must_arguments;
+        if (must_arguments == 1)
+        {
+            target->pattern = option;
+            continue;
+        }
+        if (must_arguments > 1)
+        {
+            target->filepath = option;
+            break;
+        }
+    }
+    return target;
+}
+
+void parse_option(Options *target, char *option)
+{
+    char *clean_option = (option + 1);
+    if (!strcmp(clean_option, "E"))
+    {
+        target->regex = 1;
+        return;
+    }
+    if (strcmp(clean_option, "-color=always"))
+    {
+        target->color = 1;
+    }
+}
+
+size_t find_pattern_write_needed_lines_no_color(const char *pattern, char **lines, size_t lines_count)
 {
     size_t found_count = 0;
     for (size_t i = 0; i < lines_count; ++i)
@@ -261,6 +351,48 @@ size_t find_write_needed_lines(const char *pattern, char **lines, size_t lines_c
         if (!pattern_in_str(pattern, line))
             continue;
         printf("%s\n", line);
+        ++found_count;
+    }
+    return found_count;
+}
+
+size_t find_pattern_write_needed_lines_colored(const char *pattern, char **lines, size_t lines_count)
+{
+    size_t found_count = 0;
+    for (size_t i = 0; i < lines_count; ++i)
+    {
+        char *line = lines[i];
+        if (!pattern_in_str(pattern, line))
+            continue;
+        print_colored(line, pattern);
+        ++found_count;
+    }
+    return found_count;
+}
+
+size_t find_regex_write_needed_lines_no_colored(const char *pattern, char **lines, size_t lines_count)
+{
+    size_t found_count = 0;
+    for (size_t i = 0; i < lines_count; ++i)
+    {
+        char *line = lines[i];
+        if (!regex_in_str(pattern, line))
+            continue;
+        printf("%s\n", line);
+        ++found_count;
+    }
+    return found_count;
+}
+
+size_t find_regex_write_needed_lines_colored(const char *pattern, char **lines, size_t lines_count)
+{
+    size_t found_count = 0;
+    for (size_t i = 0; i < lines_count; ++i)
+    {
+        char *line = lines[i];
+        if (!regex_in_str(pattern, line))
+            continue;
+        print_colored(line, pattern);
         ++found_count;
     }
     return found_count;
@@ -289,6 +421,91 @@ int pattern_in_str(const char *pattern, char *str)
         }
     }
     return 0;
+}
+
+int regex_in_str(const char *regex, char *str)
+{
+    long long int str_id, reg_id, str_reg_id;
+    for (str_id = 0; str[str_id] != '\0'; ++str_id)
+    {
+        if (str[str_id] != regex[0] && regex[1] != '?' && regex[1] != '*')
+            continue;
+
+        str_reg_id = 0;
+        for (reg_id = 0; regex[reg_id] != '\0'; ++reg_id, ++str_reg_id)
+        {
+            char c = str[str_id + str_reg_id];
+            char r = regex[reg_id];
+            char next_reg = regex[reg_id + 1];
+
+            if (next_reg == '?')
+            {
+                if (c != r)
+                {
+                    --str_id;
+                }
+                ++reg_id;
+                continue;
+            }
+            if (next_reg == '*')
+            {
+                long long int tmp = str_id;
+                while (c == r && c != '\0')
+                {
+                    ++tmp;
+                    c = str[tmp + str_reg_id];
+                }
+                str_id = tmp - 1;
+                ++reg_id;
+                continue;
+            }
+            if (next_reg == '+')
+            {
+                if (c != r)
+                {
+                    break;
+                }
+                long long int tmp = str_id;
+                while (c == r && c != '\0')
+                {
+                    ++tmp;
+                    c = str[tmp + str_reg_id];
+                }
+                str_id = tmp - 1;
+                ++reg_id;
+                continue;
+            }
+            if (c != r)
+            {
+                str_id += str_reg_id;
+                break;
+            }
+        }
+        if (regex[reg_id] == '\0')
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void print_colored(char *line, const char *pattern)
+{
+    size_t i, j;
+
+    for (i = 0; line[i] != '\0'; i++)
+    {
+        for (j = 0; pattern[j] != '\0'; j++)
+        {
+            if (line[i + j] != pattern[j])
+            {
+                break;
+            }
+        }
+        if (pattern[j] == '\0')
+        {
+        }
+    }
 }
 
 char **get_lines(FILE *f, size_t *line_count)
@@ -357,22 +574,3 @@ char get_end_char_of_str(char *target)
     } while (c != '\0');
     return last_c;
 }
-
-int basic_handler(FILE *f, const char *pattern)
-{
-    size_t lines_count = 0;
-    char **lines = get_lines(f, &lines_count);
-    // go thru lines and find needed line
-    // write needed line
-    size_t found = find_write_needed_lines(pattern, lines, lines_count);
-    if (found == 0)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-// int options_handler(char **argv)
-// {
-//     handle_fatal_error(NOT_IMPLEMENTED);
-// }
