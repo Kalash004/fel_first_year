@@ -199,6 +199,9 @@ int get_error_output_code(int code)
     return errors[code].code;
 }
 // ----------------- Error handling -------------------------------------
+
+#define COLOR_START "\033[01;31m\033[K" // Start escape sequence for red
+#define COLOR_END "\033[m\033[K"
 typedef struct
 {
     int regex;
@@ -232,6 +235,8 @@ int pattern_in_str(const char *pattern, char *str);
 
 int regex_in_str(const char *regex, char *str);
 
+void highlight_pattern(const char *pattern, const char *line);
+
 void print_colored(char *line, const char *pattern);
 
 char **get_lines(FILE *f, size_t *line_count);
@@ -249,6 +254,7 @@ int main(int argc, char **argv)
     // find file
     open_file_or_stdin(args);
     int res = main_handler(args);
+    fclose(args->f);
     free_objects();
     return res;
 }
@@ -336,7 +342,7 @@ void parse_option(Options *target, char *option)
         target->regex = 1;
         return;
     }
-    if (strcmp(clean_option, "-color=always"))
+    if (!strcmp(clean_option, "-color=always"))
     {
         target->color = 1;
     }
@@ -364,7 +370,7 @@ size_t find_pattern_write_needed_lines_colored(const char *pattern, char **lines
         char *line = lines[i];
         if (!pattern_in_str(pattern, line))
             continue;
-        print_colored(line, pattern);
+        highlight_pattern(pattern, line);
         ++found_count;
     }
     return found_count;
@@ -392,7 +398,7 @@ size_t find_regex_write_needed_lines_colored(const char *pattern, char **lines, 
         char *line = lines[i];
         if (!regex_in_str(pattern, line))
             continue;
-        print_colored(line, pattern);
+        highlight_pattern(pattern, line);
         ++found_count;
     }
     return found_count;
@@ -489,23 +495,20 @@ int regex_in_str(const char *regex, char *str)
     return 0;
 }
 
-void print_colored(char *line, const char *pattern)
+void highlight_pattern(const char *pattern, const char *line)
 {
-    size_t i, j;
-
-    for (i = 0; line[i] != '\0'; i++)
+    const char *match = line;
+    while ((match = strstr(match, pattern)) != NULL)
     {
-        for (j = 0; pattern[j] != '\0'; j++)
-        {
-            if (line[i + j] != pattern[j])
-            {
-                break;
-            }
-        }
-        if (pattern[j] == '\0')
-        {
-        }
+        fwrite(line, 1, match - line, stdout);
+
+        printf(COLOR_START "%.*s" COLOR_END, (int)strlen(pattern), match);
+
+        line = match + strlen(pattern);
+        match = line;
     }
+
+    printf("%s\n", line);
 }
 
 char **get_lines(FILE *f, size_t *line_count)
