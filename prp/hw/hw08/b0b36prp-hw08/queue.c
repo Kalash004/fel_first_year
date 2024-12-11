@@ -60,9 +60,12 @@ void *pop_from_queue(queue_t *queue)
 
 void *get_from_queue(queue_t *queue, int idx)
 {
+    if (idx < 0)
+    {
+        return NULL;
+    }
+
     int temp = idx + (int)queue->read;
-    if (temp < 0)
-        temp *= -1;
 
     if (temp > queue->capacity - 1)
         return NULL;
