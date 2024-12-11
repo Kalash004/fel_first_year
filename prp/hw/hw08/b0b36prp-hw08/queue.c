@@ -65,6 +65,12 @@ void *get_from_queue(queue_t *queue, int idx)
         return NULL;
     }
 
+    if (idx + queue->read > queue->capacity) {
+        return NULL;
+    }
+
+    // TODO FINISH
+
     int temp = idx + (int)queue->read;
 
     if (temp > queue->capacity - 1)
