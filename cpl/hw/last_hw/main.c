@@ -122,6 +122,7 @@ typedef struct
 int main(int argc, char **argv) {
     data_entry_t** data_list = read_data();
     printf(data_list[0]->name);
+    free_objects();
     return 1;
 }
 
