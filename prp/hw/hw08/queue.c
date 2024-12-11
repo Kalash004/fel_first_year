@@ -6,7 +6,7 @@ queue_t *create_queue(int capacity)
     void **tmp = malloc(capacity * sizeof(void *));
     que->capacity = capacity;
     que->read = 0;
-    que->write = 1;
+    que->write = 0;
     que->pntr = tmp;
     return que;
 }
@@ -38,13 +38,13 @@ bool push_to_queue(queue_t *queue, void *data)
 
 void *pop_from_queue(queue_t *queue)
 {
-    void *target = queue->pntr[queue->read];
-
-    queue->pntr[queue->read] = NULL;
-
     ++queue->read;
     if (queue->read > queue->capacity - 1)
         queue->read = 0;
+
+
+    void *target = queue->pntr[queue->read];
+    queue->pntr[queue->read] = NULL;
 
     --queue->size;
     return target;
