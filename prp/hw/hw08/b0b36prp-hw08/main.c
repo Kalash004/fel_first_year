@@ -44,7 +44,7 @@ void get(int idx, queue_t *queue)
  * TEST PROGRAM
  * - reads commands from stdin and executes them in the queue
  */
-int main(int argc, char *argv[])
+int main(void)
 {
    int n;
    /* the tested queue */

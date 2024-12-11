@@ -5,9 +5,10 @@ queue_t *create_queue(int capacity)
     queue_t *que = malloc(sizeof(queue_t) * 1);
     void **tmp = malloc(capacity * sizeof(void *));
     que->capacity = capacity;
-    que->read = 0;
+    que->read = 0; // set at the end of the queue
     que->write = 0;
     que->pntr = tmp;
+    que->size = 0;
     return que;
 }
 
@@ -23,44 +24,64 @@ void delete_queue(queue_t *queue)
 
 bool push_to_queue(queue_t *queue, void *data)
 {
-    if (queue->write == queue->read)
+    if (queue->size == queue->capacity)
     {
         return false;
     }
     queue->pntr[queue->write] = data;
     ++queue->write;
-    if (queue->write > queue->capacity - 1)
+    if ((int)queue->write > queue->capacity - 1)
         queue->write = 0;
 
     ++queue->size;
+
+    // print_data_in_arr(queue);
     return true;
 }
 
 void *pop_from_queue(queue_t *queue)
 {
+    void *target = queue->pntr[queue->read];
+    if (target == NULL)
+        return NULL;
+
+    queue->pntr[queue->read] = NULL;
     ++queue->read;
-    if (queue->read > queue->capacity - 1)
+
+    if ((int)queue->read > queue->capacity - 1)
         queue->read = 0;
 
+    if (queue->size > 0)
+        --queue->size;
 
-    void *target = queue->pntr[queue->read];
-    queue->pntr[queue->read] = NULL;
-
-    --queue->size;
+    // print_data_in_arr(queue);
     return target;
 }
 
 void *get_from_queue(queue_t *queue, int idx)
 {
     int temp = idx + (int)queue->read;
-    if (temp > queue->capacity)
-    {
-        temp = temp % queue->capacity;
-    }
+    if (temp < 0)
+        temp *= -1;
+
+    if (temp > queue->capacity - 1)
+        return NULL;
+    // print_data_in_arr(queue);
     return queue->pntr[temp];
 }
 
 int get_queue_size(queue_t *queue)
 {
     return queue->size;
+}
+
+void print_data_in_arr(queue_t *q)
+{
+    char buff[q->size + 1];
+    for (int i = 0; i < q->size; ++i)
+    {
+        sprintf(&buff[i], "%d ", *(int *)q->pntr[i]);
+    }
+    buff[q->size] = '\0';
+    printf("%s\n", buff);
 }
