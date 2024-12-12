@@ -41,6 +41,10 @@ bool push_to_queue(queue_t *queue, void *data)
 
 void *pop_from_queue(queue_t *queue)
 {
+    if (queue->size == 0)
+    {
+        return NULL;
+    }
     void *target = queue->pntr[queue->read];
     if (target == NULL)
         return NULL;
@@ -65,7 +69,13 @@ void *get_from_queue(queue_t *queue, int idx)
         return NULL;
     }
 
-    if (idx + queue->read > queue->capacity) {
+    if (idx > queue->capacity)
+    {
+        return NULL;
+    }
+
+    if (idx > queue->size - 1)
+    {
         return NULL;
     }
 
