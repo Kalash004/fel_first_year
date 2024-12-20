@@ -1,91 +1,31 @@
-// ----------------- Error handling -------------------------------------
-#ifndef STDIOH
-#define STDIOH
-#include <stdio.h>
-#endif
-
-#ifndef STDLIBH
-#define STDLIBH
+#ifndef TONY_UTILS
+#define TONY_UTILS
 #include <stdlib.h>
-#endif
+#include <stdio.h>
 
-#ifndef STRINGH
-#define STRINGH
-#include <string.h>
-#endif
-
-#ifndef bool
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif
-#endif
-
-typedef struct
+char *read_line()
 {
-    int code;
-    char *message;
-} SError;
-typedef enum
-{
-    UNKNOWN_ERROR_CODE,
-    END
-} EError_codes;
-SError errors[] = {
-    {.code = -1, .message = "Error: Unknown error code: %d"},
-};
-void handle_fatal_error(int code);
-void handle_non_fatal_error(int code);
-void print_error_message(int code);
-void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size);
-int get_error_output_code(int code);
-/// @brief Same as handle_non_fatal_error but exits the program at the end
-/// @param code Error code number
-void handle_fatal_error(int code)
-{
-    print_error_message(code);
-    int err_code = get_error_output_code(code);
-    exit(err_code);
-}
-/// @brief Finds error code, and prints it
-/// @param code Error code number
-void handle_non_fatal_error(int code)
-{
-    print_error_message(code);
-}
-/// @brief Prints error message from char *error_messages[]
-/// @param code Error code number
-void print_error_message(int code)
-{
-    char buffer[100];
-    get_error_code_to_message(code, &buffer[0], 100);
-    fprintf(stderr, "%s\n", buffer);
-}
-/// @brief Goes thru SError errors[] and finds error by code. If doesnt exist returns Unknown error code
-/// @param code int: Error code number
-/// @param buffer char[]: Buffer to place message to
-/// @param buffer_size int: Size of the buffer
-void get_error_code_to_message(int code, char buffer[], unsigned int buffer_size)
-{
-    SError error;
-    if (code > END)
+    size_t buff_size = 10;
+    size_t used = 0;
+    char *buffer = handled_malloc(buff_size * sizeof(char));
+    char c;
+    do
     {
-        error = errors[UNKNOWN_ERROR_CODE];
-        snprintf(buffer, buffer_size, error.message, code);
-        return;
-    }
-    error = errors[code];
-    snprintf(buffer, buffer_size, "%s", error.message);
-    return;
+        if (used == buff_size - 1)
+        {
+            buff_size += 10;
+            buffer = handled_realloc(buffer, buff_size);
+        }
+        c = getchar();
+        if (c == EOF || c == '\n')
+        {
+            buffer[used] = '\0';
+            break;
+        }
+        buffer[used] = c;
+        ++used;
+    } while (c != EOF && c != '\n');
+    return buffer;
 }
-int get_error_output_code(int code)
-{
-    SError error;
-    if (code > END)
-    {
-        error = errors[UNKNOWN_ERROR_CODE];
-        return error.code;
-    }
-    return errors[code].code;
-}
-// ----------------- Error handling -------------------------------------
+
+#endif
