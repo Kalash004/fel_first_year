@@ -127,10 +127,12 @@ void free_objects()
 int main(void)
 {
     char *input = "test.txt";
+    char *output = "o.t";
+    char *outb = "out.bin";
     graph_t *g = allocate_graph();
     load_txt(input, g);
-    FILE *out = fopen("out.txt", "w");
-    display_graph_text(out, g);
+    save_txt(g, output);
+    save_bin(g, outb);
     free_graph(&g);
     return 0;
 }
@@ -184,6 +186,7 @@ void load_txt(const char *fname, graph_t *graph)
     }
     graph->edges = buffer;
     graph->edges_count = used + 1;
+    fclose(f);
 }
 
 int get_next_int_from_line(FILE *f)
@@ -195,7 +198,8 @@ int get_next_int_from_line(FILE *f)
     do
     {
         c = fgetc(f);
-        if (c == ' ' || c == '\n' || c == EOF) {
+        if (c == ' ' || c == '\n' || c == EOF)
+        {
             break;
         }
         temp[used] = c;
@@ -206,7 +210,12 @@ int get_next_int_from_line(FILE *f)
     return target;
 }
 
-void display_graph_text(FILE *f, graph_t *graph)
+void load_bin(const char *fname, graph_t *graph)
+{
+
+}
+
+void save_graph_text(FILE *f, const graph_t *const graph)
 {
     for (size_t i = 0; i < graph->edges_count - 1; ++i)
     {
@@ -224,14 +233,12 @@ void display_graph_text(FILE *f, graph_t *graph)
         fputc(' ', f);
         fflush(stdout);
 
-
         char temp3[10] = {0};
         int weight = graph->edges[i].weight;
         intToStr(weight, temp3, 10);
         print_it(f, temp3);
         fputc('\n', f);
         fflush(stdout);
-
     }
 }
 
@@ -284,4 +291,47 @@ void print_it(FILE *f, char *str)
     {
         fputc(str[i], f);
     }
+}
+
+void save_txt(const graph_t *const graph, const char *fname)
+{
+    FILE *out = fopen(fname, "w");
+    if (out == NULL)
+    {
+        // TODO: Handle not found file
+    }
+    save_graph_text(out, graph);
+    fclose(out);
+}
+
+void save_bin(const graph_t *const graph, const char *fname)
+{
+    FILE *f = fopen(fname, "wb");
+    for (size_t i = 0; i < graph->edges_count - 1; ++i)
+    {
+        edge_t edge = graph->edges[i];
+        int start = edge.start_point;
+        int end = edge.end_point;
+        int weight = edge.weight;
+
+        write_int(start, f);
+        write_int(end, f);
+        write_int(weight, f);
+        fflush(f);
+    }
+    fclose(f);
+}
+
+void write_int(int source, FILE *file)
+{
+    char *p2 = (char *)&source;
+    char byte1 = *(p2);
+    char byte2 = *(p2 + 1);
+    char byte3 = *(p2 + 2);
+    char byte4 = *(p2 + 3);
+
+    fwrite(&byte4, sizeof(char), 1, file);
+    fwrite(&byte3, sizeof(char), 1, file);
+    fwrite(&byte2, sizeof(char), 1, file);
+    fwrite(&byte1, sizeof(char), 1, file);
 }
