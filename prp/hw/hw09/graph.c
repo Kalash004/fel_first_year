@@ -127,20 +127,6 @@ void free_objects()
 
 size_t graph_count = 0;
 
-int main(void)
-{
-    char *input = "test.txt";
-    char *output = "o.test";
-    char *outb = "out.bin";
-    graph_t *g = allocate_graph();
-    load_txt(input, g);
-    save_bin(g, outb);
-    load_bin(outb, g);
-    save_txt(g, output);
-    free_graph(&g);
-    return 0;
-}
-
 graph_t *allocate_graph()
 {
     graph_t *target = handled_malloc(sizeof(graph_t) * 1);
