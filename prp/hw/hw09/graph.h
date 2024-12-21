@@ -29,6 +29,8 @@ void print_it(FILE *f, char *str);
 /* Load a graph from the binary file. */
 void load_bin(const char *fname, graph_t *graph);
 
+int read_int(FILE *f);
+
 /* Save the graph to the text file. */
 void save_txt(const graph_t *const graph, const char *fname);
 /* Save the graph to the binary file. */

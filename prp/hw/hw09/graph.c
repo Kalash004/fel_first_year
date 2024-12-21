@@ -74,7 +74,7 @@ void *handled_realloc(void *source, size_t size)
     void *temp = realloc(source, size);
     if (temp == NULL)
     {
-        free(source); // possible data loss
+        free_one_object(source); // possible data loss
     }
     Objects_to_free[obj_id] = temp;
     return temp;
@@ -104,6 +104,7 @@ void free_one_object(void *target)
         exit(-11);
     }
     free(Objects_to_free[obj_id]);
+    Objects_to_free[obj_id] = NULL;
 }
 
 void free_objects()
@@ -122,17 +123,18 @@ void free_objects()
 #include <stdbool.h>
 #include <stdio.h>
 
-#define START_BUF_SIZE 20
+#define START_BUF_SIZE 1
 
 int main(void)
 {
     char *input = "test.txt";
-    char *output = "o.t";
+    char *output = "o.test";
     char *outb = "out.bin";
     graph_t *g = allocate_graph();
     load_txt(input, g);
-    save_txt(g, output);
     save_bin(g, outb);
+    load_bin(outb, g);
+    save_txt(g, output);
     free_graph(&g);
     return 0;
 }
@@ -151,7 +153,7 @@ graph_t *allocate_graph()
 
 void free_graph(graph_t **graph)
 {
-    graph_t *g = *graph;
+    graph_t *g = graph[0];
     free_one_object(g->edges);
     free_one_object(g);
 }
@@ -185,7 +187,7 @@ void load_txt(const char *fname, graph_t *graph)
         ++used;
     }
     graph->edges = buffer;
-    graph->edges_count = used + 1;
+    graph->edges_count = used;
     fclose(f);
 }
 
@@ -212,7 +214,52 @@ int get_next_int_from_line(FILE *f)
 
 void load_bin(const char *fname, graph_t *graph)
 {
+    FILE *f = fopen(fname, "rb");
+    if (f == NULL)
+    {
+        printf("File not found: load_bin %s", fname);
+        exit(-11);
+        // TODO : Handle non existing file
+    }
 
+    size_t used = 0;
+    size_t buf_size = START_BUF_SIZE;
+    edge_t *buffer = handled_malloc(sizeof(edge_t) * buf_size);
+    while (!feof(f))
+    {
+        if (used == buf_size - 1)
+        {
+            buf_size *= 2;
+            buffer = handled_realloc(buffer, sizeof(edge_t) * buf_size);
+        }
+        int start = read_int(f);
+        int end = read_int(f);
+        int weight = read_int(f);
+        buffer[used].start_point = start;
+        buffer[used].end_point = end;
+        buffer[used].weight = weight;
+        ++used;
+    }
+    graph->edges = buffer;
+    graph->edges_count = used - 1;
+    fclose(f);
+}
+
+int read_int(FILE *f)
+{
+    char byte1;
+    char byte2;
+    char byte3;
+    char byte4;
+
+    fread(&byte1, 1, 1, f);
+    fread(&byte2, 1, 1, f);
+    fread(&byte3, 1, 1, f);
+    fread(&byte4, 1, 1, f);
+
+    char tmp[4] = {byte4, byte3, byte2, byte1};
+    int *fun = (int *)tmp;
+    return *fun;
 }
 
 void save_graph_text(FILE *f, const graph_t *const graph)
@@ -224,21 +271,18 @@ void save_graph_text(FILE *f, const graph_t *const graph)
         intToStr(start, temp, 10);
         print_it(f, temp);
         fputc(' ', f);
-        fflush(stdout);
 
         char temp2[10] = {0};
         int end = graph->edges[i].end_point;
         intToStr(end, temp2, 10);
         print_it(f, temp2);
         fputc(' ', f);
-        fflush(stdout);
 
         char temp3[10] = {0};
         int weight = graph->edges[i].weight;
         intToStr(weight, temp3, 10);
         print_it(f, temp3);
         fputc('\n', f);
-        fflush(stdout);
     }
 }
 
@@ -307,7 +351,7 @@ void save_txt(const graph_t *const graph, const char *fname)
 void save_bin(const graph_t *const graph, const char *fname)
 {
     FILE *f = fopen(fname, "wb");
-    for (size_t i = 0; i < graph->edges_count - 1; ++i)
+    for (size_t i = 0; i < graph->edges_count; ++i)
     {
         edge_t edge = graph->edges[i];
         int start = edge.start_point;
@@ -317,7 +361,6 @@ void save_bin(const graph_t *const graph, const char *fname)
         write_int(start, f);
         write_int(end, f);
         write_int(weight, f);
-        fflush(f);
     }
     fclose(f);
 }
