@@ -125,6 +125,8 @@ void free_objects()
 
 #define START_BUF_SIZE 1
 
+size_t graph_count = 0;
+
 int main(void)
 {
     char *input = "test.txt";
@@ -148,6 +150,8 @@ graph_t *allocate_graph()
     target->edges = edges;
     target->edges_count = edges_count;
 
+    ++graph_count;
+
     return target;
 }
 
@@ -156,6 +160,11 @@ void free_graph(graph_t **graph)
     graph_t *g = graph[0];
     free_one_object(g->edges);
     free_one_object(g);
+    --graph_count;
+    if (graph_count == 0)
+    {
+        free_objects();
+    }
 }
 
 void load_txt(const char *fname, graph_t *graph)
