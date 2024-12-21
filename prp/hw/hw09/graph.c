@@ -127,6 +127,19 @@ void free_objects()
 
 size_t graph_count = 0;
 
+// int main(void)
+// {
+//     // const char *load_from_txt = "./g.txt";
+//     const char *save_to_bin = "./g.bin";
+//     const char *save_to_txt = "./save.txt";
+//     graph_t *g = allocate_graph();
+//     // load_txt(load_from_txt, g);
+//     load_bin(save_to_bin, g);
+//     // save_bin(g, save_to_bin);
+//     save_txt(g, save_to_txt);
+//     return 0;
+// }
+
 graph_t *allocate_graph()
 {
     graph_t *target = handled_malloc(sizeof(graph_t) * 1);
@@ -176,6 +189,12 @@ void load_txt(const char *fname, graph_t *graph)
         int start = get_next_int_from_line(f);
         int end = get_next_int_from_line(f);
         int weight = get_next_int_from_line(f);
+
+        if (start == 0 && end == 0 && weight == 0)
+        {
+            break;
+        }
+
         buffer[used].start_point = start;
         buffer[used].end_point = end;
         buffer[used].weight = weight;
@@ -184,6 +203,11 @@ void load_txt(const char *fname, graph_t *graph)
     graph->edges = buffer;
     graph->edges_count = used;
     fclose(f);
+}
+
+bool is_line_empty()
+{
+    return false;
 }
 
 int get_next_int_from_line(FILE *f)
@@ -230,13 +254,17 @@ void load_bin(const char *fname, graph_t *graph)
         int start = read_int(f);
         int end = read_int(f);
         int weight = read_int(f);
+        if (feof(f))
+        {
+            break;
+        }
         buffer[used].start_point = start;
         buffer[used].end_point = end;
         buffer[used].weight = weight;
         ++used;
     }
     graph->edges = buffer;
-    graph->edges_count = used - 1;
+    graph->edges_count = used;
     fclose(f);
 }
 
@@ -259,7 +287,7 @@ int read_int(FILE *f)
 
 void save_graph_text(FILE *f, const graph_t *const graph)
 {
-    for (size_t i = 0; i < graph->edges_count - 1; ++i)
+    for (size_t i = 0; i < graph->edges_count; ++i)
     {
         char temp[10] = {0};
         int start = graph->edges[i].start_point;
