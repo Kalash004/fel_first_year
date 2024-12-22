@@ -101,7 +101,8 @@ void free_objects()
 #include <string.h>
 
 #define DATABASE_SIZE 100
-#define DATABASE_DIR "./"
+#define DATABASE_DIR "./database/"
+#define DATABASE_FORMAT ".dat"
 
 // make struct
 typedef struct
@@ -139,9 +140,15 @@ data_entry_t *read_data()
     int buffer_size = strlen(DATABASE_DIR) + get_digit_count(DATABASE_SIZE) + 4 + 1; // null terminator 1
     char f_name[buffer_size];
     data_entry_t *target = handled_malloc(DATABASE_SIZE * sizeof(data_entry_t));
-    for (size_t i = 1; i <= DATABASE_SIZE; ++i)
+    for (size_t i = 1000; i <= DATABASE_SIZE; ++i)
     {
-        sprintf(f_name, "%s%0*lu.dat", DATABASE_DIR, buffer_size - (get_digit_count(i) + 6), i);
+        int offset = get_digit_count(i) + strlen(DATABASE_DIR) + strlen(DATABASE_FORMAT);
+        int file_padding = buffer_size - offset;
+        if (file_padding < 0)
+            file_padding = 0;
+        if (i > 9) 
+            file_padding += 1;
+        sprintf(f_name, "%s%0*lu%s", DATABASE_DIR, file_padding, i, DATABASE_FORMAT);
         FILE *f = fopen(f_name, "r");
         if (f == NULL)
             continue;
