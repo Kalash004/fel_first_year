@@ -103,45 +103,58 @@ void free_objects()
 #define DATABASE_SIZE 100
 #define DATABASE_DIR "./"
 
-
-// make struct 
+// make struct
 typedef struct
 {
     char *name;
-    char *adress;
+    char *address;
     char *phone;
     char *DOB; // date of birth
     char *occupation;
     int salary;
 } data_entry_t;
 
+data_entry_t *read_data();
+
+data_entry_t get_data_from_file(FILE *target);
+
+char *remove_metadata(const char *meta, char *data);
+
+char *read_line(FILE *f);
+
+int get_digit_count(int num);
 
 // read in files
 
-
-int main(int argc, char **argv) {
-    data_entry_t** data_list = read_data();
-    printf(data_list[0]->name);
+int main(int argc, char **argv)
+{
+    data_entry_t *data_list = read_data();
+    printf("%s", data_list[0].name);
     free_objects();
     return 1;
 }
 
-data_entry_t** read_data() {
+data_entry_t *read_data()
+{
     int buffer_size = strlen(DATABASE_DIR) + get_digit_count(DATABASE_SIZE) + 4 + 1; // null terminator 1
     char f_name[buffer_size];
-    data_entry_t** target = handled_malloc(DATABASE_SIZE * sizeof(data_entry_t *));
-    for (size_t i = 1; i <= DATABASE_SIZE; ++i) {
-        sprintf(f_name, "%s%0*d.dat", DATABASE_DIR, buffer_size, i);
+    data_entry_t *target = handled_malloc(DATABASE_SIZE * sizeof(data_entry_t));
+    for (size_t i = 1; i <= DATABASE_SIZE; ++i)
+    {
+        sprintf(f_name, "%s%0*lu.dat", DATABASE_DIR, buffer_size - (get_digit_count(i) + 6), i);
         FILE *f = fopen(f_name, "r");
-        data_entry_t *data = get_data_from_file(f);
+        if (f == NULL)
+            continue;
+        data_entry_t data = get_data_from_file(f);
         fclose(f);
         target[i - 1] = data;
     }
     return target;
 }
 
-data_entry_t* get_data_from_file(FILE *target) {
-    data_entry_t *tmp = handled_malloc(1 * sizeof(data_entry_t));
+data_entry_t get_data_from_file(FILE *target)
+{
+    data_entry_t tmp;
     char *name = remove_metadata("Name: ", read_line(target));
     char *address = remove_metadata("Address: ", read_line(target));
     char *phone = remove_metadata("Phone: ", read_line(target));
@@ -149,17 +162,18 @@ data_entry_t* get_data_from_file(FILE *target) {
     char *occupation = remove_metadata("Occupation: ", read_line(target));
     char *salary_non_clean = remove_metadata("Salary: ", read_line(target));
     int salary = atoi(salary_non_clean);
-    tmp->name = name;
-    tmp->adress = address;
-    tmp->phone = phone;
-    tmp->DOB = DOB;
-    tmp->occupation = occupation;
-    tmp->salary = salary;
+    tmp.name = name;
+    tmp.address = address;
+    tmp.phone = phone;
+    tmp.DOB = DOB;
+    tmp.occupation = occupation;
+    tmp.salary = salary;
     return tmp;
 }
 
-char *remove_metadata(const char* meta, char *data) {
-    return data[strlen(meta)]; // TODO: Ew 
+char *remove_metadata(const char *meta, char *data)
+{
+    return &data[strlen(meta)]; // TODO: Ew
 }
 
 char *read_line(FILE *f)
@@ -187,12 +201,14 @@ char *read_line(FILE *f)
     return buffer;
 }
 
-int get_digit_count(int num) {
+int get_digit_count(int num)
+{
     int count = 0;
-    
-    while(num > 0){
+
+    while (num > 0)
+    {
         count++;
-        num = num/10;
+        num = num / 10;
     }
     return count;
 }
