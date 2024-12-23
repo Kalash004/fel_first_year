@@ -470,10 +470,10 @@ void print_histogram(stats_t stats)
 {
     printf("#Month histogram:\n");
     int biggest = find_most_digit_number(stats);
-    char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    // char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     for (size_t i = 0; i < 12; ++i)
     {
-        printf("")
+        printf("+%-*i+", (biggest + 1));
     }
 }
 
