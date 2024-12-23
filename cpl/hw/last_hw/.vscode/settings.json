@@ -2,5 +2,8 @@
     "files.associations": {
         "*.ejs": "html",
         "stdio.h": "c"
-    }
+    },
+    "cSpell.words": [
+        "twentyfour"
+    ]
 }

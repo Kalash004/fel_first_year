@@ -103,6 +103,7 @@ void free_objects()
 #define DATABASE_SIZE 100
 #define DATABASE_DIR "./database/"
 #define DATABASE_FORMAT ".dat"
+#define CURRENT_YEAR 2024
 
 // make struct
 typedef struct
@@ -112,8 +113,15 @@ typedef struct
     char *phone;
     char *DOB; // date of birth
     char *occupation;
+    int age_in_twenty_twentyfour;
     int salary;
 } data_entry_t;
+
+typedef struct
+{
+    int age; // suppose int is enough
+    char *date;
+} options_t;
 
 data_entry_t *read_data();
 
@@ -125,12 +133,15 @@ char *read_line(FILE *f);
 
 int get_digit_count(int num);
 
+int get_age_from_DOB(char *DOB, int year);
+
 // read in files
 
 int main(int argc, char **argv)
 {
+
     data_entry_t *data_list = read_data();
-    printf("%s", data_list[0].name);
+    printf("%s age: %i", data_list[0].name);
     free_objects();
     return 1;
 }
@@ -140,14 +151,14 @@ data_entry_t *read_data()
     int buffer_size = strlen(DATABASE_DIR) + get_digit_count(DATABASE_SIZE) + 4 + 1; // null terminator 1
     char f_name[buffer_size];
     data_entry_t *target = handled_malloc(DATABASE_SIZE * sizeof(data_entry_t));
-    for (size_t i = 1000; i <= DATABASE_SIZE; ++i)
+    for (size_t i = 1; i <= DATABASE_SIZE; ++i)
     {
         int offset = get_digit_count(i) + strlen(DATABASE_DIR) + strlen(DATABASE_FORMAT);
         int file_padding = buffer_size - offset;
         if (file_padding < 0)
             file_padding = 0;
-        if (i > 9) 
-            file_padding += 1;
+        if (i > 9)
+            file_padding += 1; // i have no idea what is going on here, but this works if i is more than 1 digit
         sprintf(f_name, "%s%0*lu%s", DATABASE_DIR, file_padding, i, DATABASE_FORMAT);
         FILE *f = fopen(f_name, "r");
         if (f == NULL)
@@ -175,6 +186,7 @@ data_entry_t get_data_from_file(FILE *target)
     tmp.DOB = DOB;
     tmp.occupation = occupation;
     tmp.salary = salary;
+    tmp.age_in_twenty_twentyfour = get_age_from_DOB(DOB, CURRENT_YEAR);
     return tmp;
 }
 
@@ -218,4 +230,16 @@ int get_digit_count(int num)
         num = num / 10;
     }
     return count;
+}
+
+int get_age_from_DOB(char *DOB, int year)
+{
+    char c[5];
+    for (size_t i = 0; i < 4; ++i)
+    {
+        c[i] = DOB[i];
+    }
+    c[4] = '\0';
+    int year_from_data = atoi(c);
+    return year - year_from_data;
 }
