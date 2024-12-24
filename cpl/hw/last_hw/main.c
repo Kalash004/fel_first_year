@@ -192,8 +192,6 @@ int main(int argc, char **argv)
     data_entry_t *data_list = get_data_data_list();
     stats_t stats = {0};
     data_entry_t data = find_needed_entry_count_stats(data_list, opt, &stats);
-    stats.may_count = 10;
-    stats.apr_count = 0;
     printf("#Average salary: %i\n", stats.avg_salary);
     print_histogram(stats);
     if (data.birth_day == 0 && data.birth_month == 0 && data.birth_year == 0)
