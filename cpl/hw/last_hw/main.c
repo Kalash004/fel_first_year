@@ -174,6 +174,12 @@ void add_month_count(data_entry_t data, stats_t *save_stats_to);
 
 void print_histogram(stats_t stats);
 
+void print_month_abbreviations(int padding);
+
+void print_cell_border(int width_per_cell);
+
+void print_border(size_t cell_count, int width_per_cell);
+
 int find_most_digit_number(stats_t stats);
 
 // read in files
@@ -192,6 +198,7 @@ int main(int argc, char **argv)
     }
     else
     {
+        printf("#Found entry:\n");
         print_data(data);
     }
     free_objects();
@@ -470,11 +477,41 @@ void print_histogram(stats_t stats)
 {
     printf("#Month histogram:\n");
     int biggest = find_most_digit_number(stats);
-    // char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    int padding = biggest + 1;
+    print_border(12, padding);
+    print_month_abbreviations(padding);
+    print_border(12, padding);
+    print_border(12, padding);
+}
+
+void print_month_abbreviations(int padding)
+{
+    char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     for (size_t i = 0; i < 12; ++i)
     {
-        printf("+%-*i+", (biggest + 1));
+        printf("|%*s", padding, months[i]);
     }
+    printf("|");
+    printf("\n");
+}
+
+void print_cell_border(int width_per_cell)
+{
+    printf("+");
+    for (size_t i = 0; i < width_per_cell; ++i)
+    {
+        printf("-");
+    }
+}
+
+void print_border(size_t cell_count, int width_per_cell)
+{
+    for (size_t i = 0; i < cell_count; ++i)
+    {
+        print_cell_border(width_per_cell);
+    }
+    printf("+");
+    printf("\n");
 }
 
 int find_most_digit_number(stats_t stats)
