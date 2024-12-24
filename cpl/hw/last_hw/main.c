@@ -174,6 +174,8 @@ void add_month_count(data_entry_t data, stats_t *save_stats_to);
 
 void print_histogram(stats_t stats);
 
+void print_stats(int padding, stats_t stats);
+
 void print_month_abbreviations(int padding);
 
 void print_cell_border(int width_per_cell);
@@ -190,6 +192,8 @@ int main(int argc, char **argv)
     data_entry_t *data_list = get_data_data_list();
     stats_t stats = {0};
     data_entry_t data = find_needed_entry_count_stats(data_list, opt, &stats);
+    stats.may_count = 10;
+    stats.apr_count = 0;
     printf("#Average salary: %i\n", stats.avg_salary);
     print_histogram(stats);
     if (data.birth_day == 0 && data.birth_month == 0 && data.birth_year == 0)
@@ -477,11 +481,32 @@ void print_histogram(stats_t stats)
 {
     printf("#Month histogram:\n");
     int biggest = find_most_digit_number(stats);
-    int padding = biggest + 1;
+    int padding = biggest + 2;
+    padding = (padding < 6)? 6 : padding;
     print_border(12, padding);
     print_month_abbreviations(padding);
     print_border(12, padding);
+    print_stats(padding, stats);
     print_border(12, padding);
+}
+
+void print_stats(int padding, stats_t stats)
+{
+    typedef union
+    {
+        stats_t stats_u;
+        int arr[sizeof(stats_t) / sizeof(int)];
+
+    } access_stats;
+
+    access_stats access;
+    access.stats_u = stats;
+    for (size_t i = 3; i < sizeof(stats_t) / sizeof(int) - 1; ++i)
+    {
+        int num = access.arr[i];
+        printf("|%*i ", padding - 1, num);
+    }
+    printf("|\n");
 }
 
 void print_month_abbreviations(int padding)
@@ -489,7 +514,7 @@ void print_month_abbreviations(int padding)
     char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
     for (size_t i = 0; i < 12; ++i)
     {
-        printf("|%*s", padding, months[i]);
+        printf("| %*s ", padding - 2, months[i]);
     }
     printf("|");
     printf("\n");
