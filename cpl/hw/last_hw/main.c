@@ -116,8 +116,8 @@ typedef struct
     int birth_month;
     int birth_day;
     char *occupation;
-    int age_in_twenty_twentyfour;
-    int salary;
+    int age_in_twenty_twentyfour; // suppose int is enough
+    int salary;                   // suppose int is enough
 } data_entry_t;
 
 typedef struct
@@ -480,7 +480,7 @@ void print_histogram(stats_t stats)
     printf("#Month histogram:\n");
     int biggest = find_most_digit_number(stats);
     int padding = biggest + 2;
-    padding = (padding < 6)? 6 : padding;
+    padding = (padding < 6) ? 6 : padding;
     print_border(12, padding);
     print_month_abbreviations(padding);
     print_border(12, padding);
