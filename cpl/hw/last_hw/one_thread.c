@@ -491,8 +491,6 @@ void add_month_count(data_entry_t data, stats_t *save_stats_to)
 
 void print_histogram(stats_t stats)
 {
-    stats.jun_count = 312312;
-
     access_stats_u access;
     access.stats_u = stats;
 

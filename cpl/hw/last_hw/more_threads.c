@@ -234,7 +234,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void producer_handler(size_t db_start, size_t db_end, bool *stop_flag)
+void producer_handler(size_t db_start, size_t db_end, bool *stop_flag, queue_t *q)
 {
     size_t index = db_start;
     while (!stop_flag)
@@ -245,16 +245,23 @@ void producer_handler(size_t db_start, size_t db_end, bool *stop_flag)
             break;
         }
         // get data
+        data_entry_t *data_holder = handled_malloc(sizeof(data_entry_t));
         data_entry_t data = get_one_entry(index);
+        *data_holder = data;
         // check queue not full
+        if (q->size == q->capacity)
+        {
+            // wait ?
+        }
         // push into queue
-
+        place_data_into_queue(data_holder, q);
         ++index;
     }
 }
 
-bool place_data_into_queue(void *data)
+bool place_data_into_queue(void *data, queue_t *q)
 {
+    push_to_queue(q, data);
 }
 
 void display_output(stats_t stats, data_entry_t data)
