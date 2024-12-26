@@ -94,7 +94,6 @@ void free_objects()
     free(Objects_to_free);
 }
 #endif
-// --------------------------- Garbage collector end -----------------------------
 
 // ------------------------- Main -----------------------------------
 
@@ -106,8 +105,6 @@ void free_objects()
 #define DATABASE_DIR "./database/"
 #define DATABASE_FORMAT ".dat"
 #define CURRENT_YEAR 2024
-#define PRODUCER_COUNT 1
-#define CONSUMER_COUNT 1
 
 // make struct
 typedef struct
@@ -194,17 +191,9 @@ int find_most_digit_number(stats_t stats);
 int main(int argc, char **argv)
 {
     options_t opt = parse_args(argc, argv);
+    data_entry_t *data_list = get_data_data_list();
     stats_t stats = {0};
-    data_entry_t data = {0};
-
-    // make pool of producers
-
-    // make pool of consumers
-
-    // get data to consumers
-
-    // get found entry and stats back
-
+    data_entry_t data = find_needed_entry_count_stats(data_list, opt, &stats);
     display_output(stats, data);
     free_objects();
     return 0;
