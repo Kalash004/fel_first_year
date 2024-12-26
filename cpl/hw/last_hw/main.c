@@ -94,24 +94,17 @@ void free_objects()
     free(Objects_to_free);
 }
 #endif
-// --------------------------- Garbage collector end -----------------------------
 
 // ------------------------- Main -----------------------------------
 
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include "queue.h"
 
 #define DATABASE_SIZE 100
 #define DATABASE_DIR "./database/"
 #define DATABASE_FORMAT ".dat"
 #define CURRENT_YEAR 2024
-#define PRODUCER_COUNT 1
-#define CONSUMER_COUNT 1
-#define BUFFER_SIZE 30
 
 // make struct
 typedef struct
@@ -152,6 +145,13 @@ typedef struct
     int dec_count;
 } stats_t;
 
+typedef union
+{
+    stats_t stats_u;
+    int arr[sizeof(stats_t) / sizeof(int)];
+
+} access_stats_u;
+
 void display_output(stats_t stats, data_entry_t data);
 
 data_entry_t *
@@ -183,51 +183,27 @@ void add_month_count(data_entry_t data, stats_t *save_stats_to);
 
 void print_histogram(stats_t stats);
 
-void print_stats(int padding, stats_t stats);
+void print_stats(access_stats_u access);
 
-void print_month_abbreviations(int padding);
+void print_stat(int padding, int num);
 
-void print_cell_border(int width_per_cell);
+void print_month_abbreviations(access_stats_u access);
 
-void print_border(size_t cell_count, int width_per_cell);
+void print_month_abbreviation(int padding, int month_id);
 
-int find_most_digit_number(stats_t stats);
+void print_border(access_stats_u access);
 
 // read in files
 
 int main(int argc, char **argv)
 {
     options_t opt = parse_args(argc, argv);
-    stats_t found_stats = {0};
-    data_entry_t found_data = {0};
-
-    queue_t *data_queue = create_queue(BUFFER_SIZE);
-
-    // make pool of producers
-    pthread_t producer_pool[PRODUCER_COUNT];
-    for (size_t i = 0; i < PRODUCER_COUNT; ++i)
-    {
-        producer_pool[i] = pthread_create();
-    }
-
-    // make pool of consumers
-    pthread_t consumer_pool[CONSUMER_COUNT];
-    for (size_t i = 0; i < CONSUMER_COUNT; ++i)
-    {
-        consumer_pool[i] = pthread_create();
-    }
-
-    // get data to consumers
-
-    // get found entry and stats back
-
-    display_output(found_stats, found_data);
+    data_entry_t *data_list = get_data_data_list();
+    stats_t stats = {0};
+    data_entry_t data = find_needed_entry_count_stats(data_list, opt, &stats);
+    display_output(stats, data);
     free_objects();
     return 0;
-}
-
-void producer_handler(int loop)
-{
 }
 
 void display_output(stats_t stats, data_entry_t data)
@@ -515,45 +491,52 @@ void add_month_count(data_entry_t data, stats_t *save_stats_to)
 
 void print_histogram(stats_t stats)
 {
+    stats.jun_count = 312312;
+
+    access_stats_u access;
+    access.stats_u = stats;
+
     printf("#Month histogram:\n");
-    int biggest = find_most_digit_number(stats);
-    int padding = biggest + 2;
-    padding = (padding < 5) ? 5 : padding;
-    print_border(12, padding);
-    print_month_abbreviations(padding);
-    print_border(12, padding);
-    print_stats(padding, stats);
-    print_border(12, padding);
+    print_border(access);
+    print_month_abbreviations(access);
+    print_border(access);
+    print_stats(access);
+    print_border(access);
 }
 
-void print_stats(int padding, stats_t stats)
+void print_stats(access_stats_u access)
 {
-    typedef union
-    {
-        stats_t stats_u;
-        int arr[sizeof(stats_t) / sizeof(int)];
-
-    } access_stats;
-
-    access_stats access;
-    access.stats_u = stats;
     for (size_t i = 3; i < sizeof(stats_t) / sizeof(int) - 1; ++i)
     {
         int num = access.arr[i];
-        printf("|%*i ", padding - 1, num);
+        int padding = get_digit_count(num) + 2;
+        padding = (padding < 5) ? 5 : padding;
+        print_stat(padding, num);
     }
     printf("|\n");
 }
 
-void print_month_abbreviations(int padding)
+void print_stat(int padding, int num)
+{
+    printf("|%*i ", padding - 1, num);
+}
+
+void print_month_abbreviations(access_stats_u access)
+{
+    for (size_t i = 3; i < sizeof(stats_t) / sizeof(int) - 1; ++i)
+    {
+        int num = access.arr[i];
+        int padding = get_digit_count(num) + 2;
+        padding = (padding < 5) ? 5 : padding;
+        print_month_abbreviation(padding, i - 3);
+    }
+    printf("|\n");
+}
+
+void print_month_abbreviation(int padding, int month_id)
 {
     char *months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    for (size_t i = 0; i < 12; ++i)
-    {
-        printf("| %*s ", padding - 2, months[i]);
-    }
-    printf("|");
-    printf("\n");
+    printf("| %*s ", padding - 2, months[month_id]);
 }
 
 void print_cell_border(int width_per_cell)
@@ -565,36 +548,14 @@ void print_cell_border(int width_per_cell)
     }
 }
 
-void print_border(size_t cell_count, int width_per_cell)
+void print_border(access_stats_u access)
 {
-    for (size_t i = 0; i < cell_count; ++i)
-    {
-        print_cell_border(width_per_cell);
-    }
-    printf("+");
-    printf("\n");
-}
-
-int find_most_digit_number(stats_t stats)
-{
-    typedef union
-    {
-        stats_t stats_u;
-        int arr[sizeof(stats_t) / sizeof(int)];
-
-    } access_stats;
-
-    access_stats access;
-    access.stats_u = stats;
-
-    int most = 0;
-    // accessing month counts with union
-    for (size_t i = 4; i < sizeof(stats_t) / sizeof(int) - 1; ++i)
+    for (size_t i = 3; i < sizeof(stats_t) / sizeof(int) - 1; ++i)
     {
         int num = access.arr[i];
-        int dig_count = get_digit_count(num);
-        if (dig_count > most)
-            most = dig_count;
+        int padding = get_digit_count(num) + 2;
+        padding = (padding < 5) ? 5 : padding;
+        print_cell_border(padding);
     }
-    return most;
+    printf("+\n");
 }

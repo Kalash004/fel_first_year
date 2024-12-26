@@ -8,5 +8,5 @@ OUT = -o a.out
 a.out : main.c queue.o
 	$(CC) main.c $(FLAGS_PED) -C queue.o $(OUT)
 
-queue.o : queue.h queue.c
-	$(CC) queue.c $(FLAGS_BASIC) -c -o queue.o
+# queue.o : queue.h queue.c
+# 	$(CC) queue.c $(FLAGS_BASIC) -c -o queue.o
