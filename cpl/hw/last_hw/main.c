@@ -145,6 +145,8 @@ typedef struct
     int dec_count;
 } stats_t;
 
+void display_output(stats_t stats, data_entry_t data);
+
 data_entry_t *
 get_data_data_list();
 
@@ -192,6 +194,13 @@ int main(int argc, char **argv)
     data_entry_t *data_list = get_data_data_list();
     stats_t stats = {0};
     data_entry_t data = find_needed_entry_count_stats(data_list, opt, &stats);
+    display_output(stats, data);
+    free_objects();
+    return 0;
+}
+
+void display_output(stats_t stats, data_entry_t data)
+{
     printf("#Average salary: %i\n", stats.avg_salary);
     print_histogram(stats);
     if (data.birth_day == 0 && data.birth_month == 0 && data.birth_year == 0)
@@ -203,8 +212,6 @@ int main(int argc, char **argv)
         printf("#Found entry:\n");
         print_data(data);
     }
-    free_objects();
-    return 0;
 }
 
 data_entry_t *get_data_data_list()
@@ -480,7 +487,7 @@ void print_histogram(stats_t stats)
     printf("#Month histogram:\n");
     int biggest = find_most_digit_number(stats);
     int padding = biggest + 2;
-    padding = (padding < 6) ? 6 : padding;
+    padding = (padding < 5) ? 5 : padding;
     print_border(12, padding);
     print_month_abbreviations(padding);
     print_border(12, padding);
