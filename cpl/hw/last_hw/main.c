@@ -101,6 +101,9 @@ void free_objects()
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include "queue.h"
 
 #define DATABASE_SIZE 100
 #define DATABASE_DIR "./database/"
@@ -108,6 +111,7 @@ void free_objects()
 #define CURRENT_YEAR 2024
 #define PRODUCER_COUNT 1
 #define CONSUMER_COUNT 1
+#define BUFFER_SIZE 30
 
 // make struct
 typedef struct
@@ -194,20 +198,36 @@ int find_most_digit_number(stats_t stats);
 int main(int argc, char **argv)
 {
     options_t opt = parse_args(argc, argv);
-    stats_t stats = {0};
-    data_entry_t data = {0};
+    stats_t found_stats = {0};
+    data_entry_t found_data = {0};
+
+    queue_t *data_queue = create_queue(BUFFER_SIZE);
 
     // make pool of producers
+    pthread_t producer_pool[PRODUCER_COUNT];
+    for (size_t i = 0; i < PRODUCER_COUNT; ++i)
+    {
+        producer_pool[i] = pthread_create();
+    }
 
     // make pool of consumers
+    pthread_t consumer_pool[CONSUMER_COUNT];
+    for (size_t i = 0; i < CONSUMER_COUNT; ++i)
+    {
+        consumer_pool[i] = pthread_create();
+    }
 
     // get data to consumers
 
     // get found entry and stats back
 
-    display_output(stats, data);
+    display_output(found_stats, found_data);
     free_objects();
     return 0;
+}
+
+void producer_handler(int loop)
+{
 }
 
 void display_output(stats_t stats, data_entry_t data)
