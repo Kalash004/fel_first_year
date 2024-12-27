@@ -208,6 +208,18 @@ void print_month_abbreviation(int padding, int month_id);
 
 void print_border(access_stats_u access);
 
+void *producer_handler(void *args_input);
+
+void *consumer_handler(void *args_input);
+
+data_entry_t get_one_entry(size_t index);
+
+void make_file_name(size_t index, char *target, int size);
+
+bool is_needed_entry_count_stat(data_entry_t data, options_t opt, stats_t *save_stats_to);
+
+// ------------------------ header end
+
 pthread_mutex_t queue_push_lock;
 pthread_mutex_t queue_capacity_check_lock;
 
@@ -271,13 +283,14 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void producer_handler(producer_args_t args)
+void *producer_handler(void *args_input)
 {
+    producer_args_t args = *(producer_args_t *)args_input;
     size_t index = args.db_start;
     while (!*args.stop_flag)
     {
         if (index == args.db_end)
-            return;
+            return NULL;
         // get data
         data_entry_t *data_holder = handled_malloc(sizeof(data_entry_t));
         data_entry_t data = get_one_entry(index);
@@ -294,11 +307,12 @@ void producer_handler(producer_args_t args)
         pthread_mutex_unlock(&queue_capacity_check_lock);
         ++index;
     }
-    return;
+    return NULL;
 }
 
-void consumer_handler(consumer_args_t args)
+void *consumer_handler(void *args_input)
 {
+    consumer_args_t args = *(consumer_args_t *)args_input;
     stats_t *stats = handled_malloc(sizeof(stats_t));
     data_entry_t *data = handled_malloc(sizeof(data_entry_t));
     while (!*args.stop_flag)
@@ -306,15 +320,16 @@ void consumer_handler(consumer_args_t args)
         pthread_mutex_lock(&queue_push_lock);
         *data = *(data_entry_t *)pop_from_queue(args.queue);
         pthread_mutex_unlock(&queue_push_lock);
-        bool is_found = is_needed_entry_count_stat(*data, args.options, &stats);
+        bool is_found = is_needed_entry_count_stat(*data, args.options, stats);
         if (is_found)
         {
             *args.stop_flag = true;
             args.target_data = data;
             args.target_stats = stats;
-            return;
+            return NULL;
         }
     }
+    return NULL;
 }
 
 void display_output(stats_t stats, data_entry_t data)
@@ -425,7 +440,7 @@ options_t parse_args(int argc, char **argv)
     if (argc != 3)
     {
         // TODO: Handle argcount;
-        printf("Bad amount of args");
+        printf("Bad amount of args\n");
         exit(1);
     }
     options_t target;
