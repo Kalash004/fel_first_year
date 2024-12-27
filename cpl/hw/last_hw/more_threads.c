@@ -174,7 +174,8 @@ typedef struct
     queue_t *queue;
     stats_t *target_stats;
     data_entry_t *target_data;
-    options_t *args;
+    options_t options;
+    bool *stop_flag;
 } consumer_args_t;
 
 void display_output(stats_t stats, data_entry_t data);
@@ -241,30 +242,41 @@ int main(int argc, char **argv)
     pthread_t producer_pool[PRODUCER_COUNT];
     for (size_t i = 0; i < PRODUCER_COUNT; ++i)
     {
-        if (i == PRODUCER_COUNT - 1)
-        {
-            producer_args_t arg;
-            arg.db_start = i * chunk_size;
-            arg.db_end = (i == PRODUCER_COUNT - 1) ? DATABASE_SIZE : arg.db_start + chunk_size; // TODO : test for right math
-            arg.q = data_queue;
-            arg.stop_flag = stop_flag;
-            pthread_t t;
-            producer_pool[i] = t;
-            pthread_create(&t, NULL, producer_handler, &arg);
-            continue;
-        }
+        producer_args_t arg;
+        arg.db_start = i * chunk_size;
+        arg.db_end = (i == PRODUCER_COUNT - 1) ? DATABASE_SIZE : arg.db_start + chunk_size; // TODO : test for right math
+        arg.q = data_queue;
+        arg.stop_flag = stop_flag;
+        pthread_t t;
+        pthread_create(&t, NULL, producer_handler, &arg);
+        producer_pool[i] = t;
     }
 
     // make pool of consumers
     pthread_t consumer_pool[CONSUMER_COUNT];
+    consumer_args_t arg;
+    arg.options = opt;
+    arg.queue = data_queue;
+    arg.stop_flag = stop_flag;
+    arg.target_data = &found_data;
+    arg.target_stats = &found_stats;
     for (size_t i = 0; i < CONSUMER_COUNT; ++i)
     {
-        // consumer_pool[i] = pthread_create();
+        pthread_t t;
+        pthread_create(&t, NULL, consumer_handler, &arg);
+        consumer_pool[i] = t;
     }
 
-    // get data to consumers
-
-    // get found entry and stats back
+    // await for producers to stop
+    for (size_t i = 0; i < PRODUCER_COUNT; ++i)
+    {
+        pthread_join(producer_pool[i], NULL);
+    }
+    // await for consumers to stop
+    for (size_t i = 0; i < CONSUMER_COUNT; ++i)
+    {
+        pthread_join(consumer_pool[i], NULL);
+    }
 
     display_output(found_stats, found_data);
     free_objects();
@@ -274,8 +286,10 @@ int main(int argc, char **argv)
 void producer_handler(producer_args_t args)
 {
     size_t index = args.db_start;
-    while (!args.stop_flag)
+    while (!*args.stop_flag)
     {
+        if (index == args.db_end)
+            return;
         // get data
         data_entry_t *data_holder = handled_malloc(sizeof(data_entry_t));
         data_entry_t data = get_one_entry(index);
@@ -292,16 +306,27 @@ void producer_handler(producer_args_t args)
         pthread_mutex_unlock(&queue_capacity_check_lock);
         ++index;
     }
+    return;
 }
 
 void consumer_handler(consumer_args_t args)
 {
-    stats_t stats = {0};
-    data_entry_t data = {0};
-    pthread_mutex_lock(&queue_push_lock);
-    data = *(data_entry_t *)pop_from_queue(args.queue);
-    pthread_mutex_unlock(&queue_push_lock);
-    is_needed_entry_count_stat()
+    stats_t *stats = handled_malloc(sizeof(stats_t));
+    data_entry_t *data = handled_malloc(sizeof(data_entry_t));
+    while (!*args.stop_flag)
+    {
+        pthread_mutex_lock(&queue_push_lock);
+        *data = *(data_entry_t *)pop_from_queue(args.queue);
+        pthread_mutex_unlock(&queue_push_lock);
+        bool is_found = is_needed_entry_count_stat(*data, args.options, &stats);
+        if (is_found)
+        {
+            *args.stop_flag = true;
+            args.target_data = data;
+            args.target_stats = stats;
+            return;
+        }
+    }
 }
 
 void display_output(stats_t stats, data_entry_t data)
@@ -523,25 +548,15 @@ bool compare_month_day(char *x, char *y)
     return (month1_int == month2_int && day1_int == day2_int) ? true : false;
 }
 
-data_entry_t find_needed_entry_count_stats(data_entry_t *data_list, options_t opt, stats_t *save_stats_to)
+bool is_needed_entry_count_stat(data_entry_t data, options_t opt, stats_t *save_stats_to)
 {
-    data_entry_t target = get_empty_data_entry();
-    data_entry_t data;
-    size_t i;
-    for (i = 0; i < DATABASE_SIZE; ++i)
-    {
-        data = data_list[i];
-        save_stats_to->sum_salary += data.salary;
-        add_month_count(data, save_stats_to);
-        if (data.age_in_twenty_twentyfour != opt.age)
-            continue;
-        if (data.birth_month != opt.month || data.birth_day != opt.day)
-            continue;
-        target = data;
-        break;
-    }
-    save_stats_to->avg_salary = save_stats_to->sum_salary / (i + 1);
-    return target;
+    save_stats_to->sum_salary += data.salary;
+    add_month_count(data, save_stats_to);
+    if (data.age_in_twenty_twentyfour != opt.age)
+        return false;
+    if (data.birth_month != opt.month || data.birth_day != opt.day)
+        return false;
+    return true;
 }
 
 data_entry_t get_empty_data_entry()
