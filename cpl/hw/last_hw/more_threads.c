@@ -110,7 +110,7 @@ void free_objects()
 #define DATABASE_DIR "./database/"
 #define DATABASE_FORMAT ".dat"
 #define CURRENT_YEAR 2024
-#define PRODUCER_COUNT 1
+#define PRODUCER_COUNT 5
 #define CONSUMER_COUNT 5
 #define BUFFER_SIZE 100
 
@@ -244,8 +244,7 @@ int main(int argc, char **argv)
     {
         producer_args_t *arg_producers = handled_malloc(sizeof(producer_args_t));
         arg_producers->db_start = i * chunk_size + 1;
-        arg_producers->db_start = (arg_producers->db_start < 1) ? 1 : arg_producers->db_start;
-        arg_producers->db_end = (i == PRODUCER_COUNT - 1) ? DATABASE_SIZE : arg_producers->db_start + chunk_size;
+        arg_producers->db_end = (i == PRODUCER_COUNT - 1) ? DATABASE_SIZE : arg_producers->db_start + chunk_size - 1;
         arg_producers->q = data_queue;
         arg_producers->stop_flag = &stop_flag;
 
@@ -302,7 +301,7 @@ void *producer_handler(void *args_input)
     size_t index = args.db_start;
     while (!*args.stop_flag)
     {
-        if (index - 1 == args.db_end)
+        if (index == args.db_end + 1)
         {
             return NULL;
         }
