@@ -103,6 +103,7 @@ void free_objects()
 #include <stdbool.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <unistd.h>
 #include "queue.h"
 
 #define DATABASE_SIZE 100
@@ -159,6 +160,23 @@ typedef union
 
 } access_stats_u;
 
+typedef struct
+{
+    size_t db_start;
+    size_t db_end;
+    bool *stop_flag;
+    queue_t *q;
+
+} producer_args_t;
+
+typedef struct
+{
+    queue_t *queue;
+    stats_t *target_stats;
+    data_entry_t *target_data;
+    options_t *args;
+} consumer_args_t;
+
 void display_output(stats_t stats, data_entry_t data);
 
 data_entry_t *get_data_data_list(size_t start, size_t end);
@@ -201,21 +219,40 @@ void print_border(access_stats_u access);
 
 int find_most_digit_number(stats_t stats);
 
-// read in files
+pthread_mutex_t queue_push_lock;
+pthread_mutex_t queue_capacity_check_lock;
 
 int main(int argc, char **argv)
 {
     options_t opt = parse_args(argc, argv);
+
+    bool *stop_flag = false;
+    pthread_mutex_init(&queue_push_lock, NULL);
+    pthread_mutex_init(&queue_capacity_check_lock, NULL);
+
     stats_t found_stats = {0};
     data_entry_t found_data = {0};
 
     queue_t *data_queue = create_queue(BUFFER_SIZE);
 
+    size_t chunk_size = DATABASE_SIZE / PRODUCER_COUNT;
+
     // make pool of producers
     pthread_t producer_pool[PRODUCER_COUNT];
     for (size_t i = 0; i < PRODUCER_COUNT; ++i)
     {
-        // producer_pool[i] = pthread_create();
+        if (i == PRODUCER_COUNT - 1)
+        {
+            producer_args_t arg;
+            arg.db_start = i * chunk_size;
+            arg.db_end = (i == PRODUCER_COUNT - 1) ? DATABASE_SIZE : arg.db_start + chunk_size; // TODO : test for right math
+            arg.q = data_queue;
+            arg.stop_flag = stop_flag;
+            pthread_t t;
+            producer_pool[i] = t;
+            pthread_create(&t, NULL, producer_handler, &arg);
+            continue;
+        }
     }
 
     // make pool of consumers
@@ -234,34 +271,37 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void producer_handler(size_t db_start, size_t db_end, bool *stop_flag, queue_t *q)
+void producer_handler(producer_args_t args)
 {
-    size_t index = db_start;
-    while (!stop_flag)
+    size_t index = args.db_start;
+    while (!args.stop_flag)
     {
-        if (index > DATABASE_SIZE)
-        {
-            *stop_flag = true;
-            break;
-        }
         // get data
         data_entry_t *data_holder = handled_malloc(sizeof(data_entry_t));
         data_entry_t data = get_one_entry(index);
         *data_holder = data;
         // check queue not full
-        if (q->size == q->capacity)
+        pthread_mutex_lock(&queue_capacity_check_lock);
+        while (args.q->size == args.q->capacity)
         {
-            // wait ?
+            sleep(5);
         }
-        // push into queue
-        place_data_into_queue(data_holder, q);
+        pthread_mutex_lock(&queue_push_lock);
+        push_to_queue(args.q, data_holder);
+        pthread_mutex_unlock(&queue_push_lock);
+        pthread_mutex_unlock(&queue_capacity_check_lock);
         ++index;
     }
 }
 
-bool place_data_into_queue(void *data, queue_t *q)
+void consumer_handler(consumer_args_t args)
 {
-    push_to_queue(q, data);
+    stats_t stats = {0};
+    data_entry_t data = {0};
+    pthread_mutex_lock(&queue_push_lock);
+    data = *(data_entry_t *)pop_from_queue(args.queue);
+    pthread_mutex_unlock(&queue_push_lock);
+    is_needed_entry_count_stat()
 }
 
 void display_output(stats_t stats, data_entry_t data)
