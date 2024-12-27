@@ -180,8 +180,6 @@ typedef struct
 
 void display_output(stats_t stats, data_entry_t data);
 
-data_entry_t *get_data_data_list(size_t start, size_t end);
-
 data_entry_t get_data_from_file(FILE *target);
 
 char *remove_metadata(const char *meta, char *data);
@@ -190,17 +188,9 @@ char *read_line(FILE *f);
 
 int get_digit_count(int num);
 
-int get_age_from_DOB(char *DOB, int year);
-
 options_t parse_args(int argc, char **argv);
 
 void DOB_to_int(char *DOB, int *day, int *month, int *year_c);
-
-bool compare_month_day(char *x, char *y);
-
-data_entry_t find_needed_entry_count_stats(data_entry_t *data_list, options_t opt, stats_t *save_stats_to);
-
-data_entry_t get_empty_data_entry();
 
 void print_data(data_entry_t target);
 
@@ -217,8 +207,6 @@ void print_month_abbreviations(access_stats_u access);
 void print_month_abbreviation(int padding, int month_id);
 
 void print_border(access_stats_u access);
-
-int find_most_digit_number(stats_t stats);
 
 pthread_mutex_t queue_push_lock;
 pthread_mutex_t queue_capacity_check_lock;
@@ -344,30 +332,6 @@ void display_output(stats_t stats, data_entry_t data)
     }
 }
 
-data_entry_t *get_data_data_list(size_t start, size_t end)
-{
-    int buffer_size = strlen(DATABASE_DIR) + get_digit_count(DATABASE_SIZE) + 4 + 1; // null terminator 1
-    char f_name[buffer_size];
-    data_entry_t *target = handled_malloc(DATABASE_SIZE * sizeof(data_entry_t));
-    for (size_t i = start; i <= end; ++i)
-    {
-        int offset = get_digit_count(i) + strlen(DATABASE_DIR) + strlen(DATABASE_FORMAT);
-        int file_padding = buffer_size - offset;
-        if (file_padding < 0)
-            file_padding = 0;
-        if (i > 9)
-            file_padding += 1; // i have no idea what is going on here, but this works if i is more than 1 digit
-        sprintf(f_name, "%s%0*lu%s", DATABASE_DIR, file_padding, i, DATABASE_FORMAT);
-        FILE *f = fopen(f_name, "r");
-        if (f == NULL)
-            continue;
-        data_entry_t data = get_data_from_file(f);
-        fclose(f);
-        target[i - 1] = data;
-    }
-    return target;
-}
-
 data_entry_t get_one_entry(size_t index)
 {
     data_entry_t target = {0};
@@ -456,18 +420,6 @@ int get_digit_count(int num)
     return count;
 }
 
-int get_age_from_DOB(char *DOB, int year)
-{
-    char c[5];
-    for (size_t i = 0; i < 4; ++i)
-    {
-        c[i] = DOB[i];
-    }
-    c[4] = '\0';
-    int year_from_data = atoi(c);
-    return year - year_from_data;
-}
-
 options_t parse_args(int argc, char **argv)
 {
     if (argc != 3)
@@ -517,37 +469,6 @@ void DOB_to_int(char *DOB, int *day, int *month, int *year)
     *year = atoi(year_c);
 }
 
-bool compare_month_day(char *x, char *y)
-{
-    // Temporary arrays to store month and day substrings
-    char month1[3], day1[3];
-    char month2[3], day2[3];
-
-    // Extracting substrings for month and day from input strings
-    month1[0] = x[5];
-    month1[1] = x[6];
-    month1[2] = '\0';
-
-    day1[0] = x[8];
-    day1[1] = x[9];
-    day1[2] = '\0';
-
-    month2[0] = y[5];
-    month2[1] = y[6];
-    month2[2] = '\0';
-
-    day2[0] = y[8];
-    day2[1] = y[9];
-    day2[2] = '\0';
-
-    // Converting extracted substrings to integers
-    int month1_int = atoi(month1);
-    int day1_int = atoi(day1);
-    int month2_int = atoi(month2);
-    int day2_int = atoi(day2);
-    return (month1_int == month2_int && day1_int == day2_int) ? true : false;
-}
-
 bool is_needed_entry_count_stat(data_entry_t data, options_t opt, stats_t *save_stats_to)
 {
     save_stats_to->sum_salary += data.salary;
@@ -557,21 +478,6 @@ bool is_needed_entry_count_stat(data_entry_t data, options_t opt, stats_t *save_
     if (data.birth_month != opt.month || data.birth_day != opt.day)
         return false;
     return true;
-}
-
-data_entry_t get_empty_data_entry()
-{
-    data_entry_t data;
-    data.address = "";
-    data.age_in_twenty_twentyfour = 0;
-    data.birth_day = 0;
-    data.birth_month = 0;
-    data.birth_year = 0;
-    data.occupation = "";
-    data.phone = "";
-    data.salary = -1;
-    data.name = "";
-    return data;
 }
 
 void print_data(data_entry_t target)

@@ -1,7 +1,8 @@
 {
     "files.associations": {
         "*.ejs": "html",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "random": "c"
     },
     "cSpell.words": [
         "twentyfour"
