@@ -111,8 +111,8 @@ void free_objects()
 #define DATABASE_FORMAT ".dat"
 #define CURRENT_YEAR 2024
 #define PRODUCER_COUNT 1
-#define CONSUMER_COUNT 1
-#define BUFFER_SIZE 30
+#define CONSUMER_COUNT 5
+#define BUFFER_SIZE 100
 
 // make struct
 typedef struct
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
 {
     options_t opt = parse_args(argc, argv);
 
-    bool *stop_flag = false;
+    bool stop_flag = false;
     pthread_mutex_init(&queue_push_lock, NULL);
     pthread_mutex_init(&queue_capacity_check_lock, NULL);
 
@@ -242,28 +242,38 @@ int main(int argc, char **argv)
     pthread_t producer_pool[PRODUCER_COUNT];
     for (size_t i = 0; i < PRODUCER_COUNT; ++i)
     {
-        producer_args_t arg;
-        arg.db_start = i * chunk_size;
-        arg.db_end = (i == PRODUCER_COUNT - 1) ? DATABASE_SIZE : arg.db_start + chunk_size; // TODO : test for right math
-        arg.q = data_queue;
-        arg.stop_flag = stop_flag;
+        producer_args_t *arg_producers = handled_malloc(sizeof(producer_args_t));
+        arg_producers->db_start = i * chunk_size + 1;
+        arg_producers->db_start = (arg_producers->db_start < 1) ? 1 : arg_producers->db_start;
+        arg_producers->db_end = (i == PRODUCER_COUNT - 1) ? DATABASE_SIZE : arg_producers->db_start + chunk_size;
+        arg_producers->q = data_queue;
+        arg_producers->stop_flag = &stop_flag;
+
         pthread_t t;
-        pthread_create(&t, NULL, producer_handler, &arg);
+        if (pthread_create(&t, NULL, producer_handler, arg_producers) != 0)
+        {
+            fprintf(stderr, "Error creating producer thread %zu\n", i);
+            return -1;
+        }
         producer_pool[i] = t;
     }
 
     // make pool of consumers
     pthread_t consumer_pool[CONSUMER_COUNT];
-    consumer_args_t arg;
-    arg.options = opt;
-    arg.queue = data_queue;
-    arg.stop_flag = stop_flag;
-    arg.target_data = &found_data;
-    arg.target_stats = &found_stats;
+    consumer_args_t *arg_consumers = handled_malloc(sizeof(consumer_args_t));
+    arg_consumers->options = opt;
+    arg_consumers->queue = data_queue;
+    arg_consumers->stop_flag = &stop_flag;
+    arg_consumers->target_data = &found_data;
+    arg_consumers->target_stats = &found_stats;
     for (size_t i = 0; i < CONSUMER_COUNT; ++i)
     {
         pthread_t t;
-        pthread_create(&t, NULL, consumer_handler, &arg);
+        if (pthread_create(&t, NULL, consumer_handler, arg_consumers) != 0)
+        {
+            fprintf(stderr, "Error creating consumer thread %zu\n", i);
+            return -1;
+        }
         consumer_pool[i] = t;
     }
 
@@ -272,7 +282,9 @@ int main(int argc, char **argv)
     {
         pthread_join(producer_pool[i], NULL);
     }
+
     // await for consumers to stop
+    printf("Waiting for consumers to finish\n");
     for (size_t i = 0; i < CONSUMER_COUNT; ++i)
     {
         pthread_join(consumer_pool[i], NULL);
@@ -285,17 +297,20 @@ int main(int argc, char **argv)
 
 void *producer_handler(void *args_input)
 {
+    // Unpack arguments
     producer_args_t args = *(producer_args_t *)args_input;
     size_t index = args.db_start;
     while (!*args.stop_flag)
     {
-        if (index == args.db_end)
+        if (index - 1 == args.db_end)
+        {
             return NULL;
-        // get data
+        }
+
         data_entry_t *data_holder = handled_malloc(sizeof(data_entry_t));
         data_entry_t data = get_one_entry(index);
         *data_holder = data;
-        // check queue not full
+
         pthread_mutex_lock(&queue_capacity_check_lock);
         while (args.q->size == args.q->capacity)
         {
@@ -305,8 +320,9 @@ void *producer_handler(void *args_input)
         push_to_queue(args.q, data_holder);
         pthread_mutex_unlock(&queue_push_lock);
         pthread_mutex_unlock(&queue_capacity_check_lock);
-        ++index;
+        ++index; // Move to the next database index
     }
+
     return NULL;
 }
 
@@ -315,20 +331,44 @@ void *consumer_handler(void *args_input)
     consumer_args_t args = *(consumer_args_t *)args_input;
     stats_t *stats = handled_malloc(sizeof(stats_t));
     data_entry_t *data = handled_malloc(sizeof(data_entry_t));
+    size_t i = 0;
+    size_t j = 1;
+
     while (!*args.stop_flag)
     {
+        ++i;
+        // printf("Consumer iteration: %zu\n", i);
         pthread_mutex_lock(&queue_push_lock);
-        *data = *(data_entry_t *)pop_from_queue(args.queue);
+
+        if (args.queue->capacity == 0) // Checking if queue is empty
+        {
+            pthread_mutex_unlock(&queue_push_lock);
+            sleep(5);
+            continue;
+        }
+
+        data = (data_entry_t *)pop_from_queue(args.queue);
+        if (data == NULL)
+        {
+            pthread_mutex_unlock(&queue_push_lock);
+            continue;
+        }
+
         pthread_mutex_unlock(&queue_push_lock);
+
         bool is_found = is_needed_entry_count_stat(*data, args.options, stats);
+
         if (is_found)
         {
             *args.stop_flag = true;
-            args.target_data = data;
-            args.target_stats = stats;
+            *args.target_data = *data;
+            *args.target_stats = *stats;
+            args.target_stats->avg_salary = stats->sum_salary / j;
             return NULL;
         }
+        ++j;
     }
+
     return NULL;
 }
 

@@ -7,7 +7,7 @@
         "name": "(gdb) Launch",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/a.out",
+        "program": "${workspaceFolder}/multi.out",
         "args": ["60", "17-08"],
         "stopAtEntry": false,
         "cwd": "${fileDirname}",
