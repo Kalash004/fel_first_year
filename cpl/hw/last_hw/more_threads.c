@@ -222,6 +222,9 @@ bool is_needed_entry_count_stat(data_entry_t data, options_t opt, stats_t *save_
 
 pthread_mutex_t queue_push_lock;
 pthread_mutex_t queue_capacity_check_lock;
+pthread_mutex_t data_counter_lock;
+
+size_t left_to_process_count = DATABASE_SIZE;
 
 int main(int argc, char **argv)
 {
@@ -230,6 +233,7 @@ int main(int argc, char **argv)
     bool stop_flag = false;
     pthread_mutex_init(&queue_push_lock, NULL);
     pthread_mutex_init(&queue_capacity_check_lock, NULL);
+    pthread_mutex_init(&data_counter_lock, NULL);
 
     stats_t found_stats = {0};
     data_entry_t found_data = {0};
@@ -290,6 +294,7 @@ int main(int argc, char **argv)
     }
 
     display_output(found_stats, found_data);
+    delete_queue(data_queue);
     free_objects();
     return 0;
 }
@@ -316,7 +321,10 @@ void *producer_handler(void *args_input)
             sleep(5);
         }
         pthread_mutex_lock(&queue_push_lock);
+        // pthread_mutex_lock(&data_counter_lock);
         push_to_queue(args.q, data_holder);
+        // --left_to_process_count;
+        // pthread_mutex_unlock(&data_counter_lock);
         pthread_mutex_unlock(&queue_push_lock);
         pthread_mutex_unlock(&queue_capacity_check_lock);
         ++index; // Move to the next database index
@@ -330,13 +338,21 @@ void *consumer_handler(void *args_input)
     consumer_args_t args = *(consumer_args_t *)args_input;
     stats_t *stats = handled_malloc(sizeof(stats_t));
     data_entry_t *data = handled_malloc(sizeof(data_entry_t));
-    size_t i = 0;
     size_t j = 1;
 
     while (!*args.stop_flag)
     {
-        ++i;
-        // printf("Consumer iteration: %zu\n", i);
+        // pthread_mutex_lock(&data_counter_lock);
+        if (left_to_process_count <= 0)
+        {
+            *args.stop_flag = true;
+            data->birth_day = 0;
+            data->birth_month = 0;
+            data->birth_year = 0;
+            *args.target_data = *data;
+            break;
+        }
+        // pthread_mutex_unlock(&data_counter_lock);
         pthread_mutex_lock(&queue_push_lock);
 
         if (args.queue->capacity == 0) // Checking if queue is empty
@@ -367,23 +383,20 @@ void *consumer_handler(void *args_input)
         }
         ++j;
     }
-
     return NULL;
 }
 
 void display_output(stats_t stats, data_entry_t data)
 {
     printf("#Average salary: %i\n", stats.avg_salary);
-    print_histogram(stats);
     if (data.birth_day == 0 && data.birth_month == 0 && data.birth_year == 0)
     {
-        printf("Not found");
+        printf("Not found\n");
+        return;
     }
-    else
-    {
-        printf("#Found entry:\n");
-        print_data(data);
-    }
+    print_histogram(stats);
+    printf("#Found entry:\n");
+    print_data(data);
 }
 
 data_entry_t get_one_entry(size_t index)
