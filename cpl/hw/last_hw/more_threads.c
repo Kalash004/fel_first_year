@@ -110,8 +110,8 @@ void free_objects()
 #define DATABASE_DIR "./database/"
 #define DATABASE_FORMAT ".dat"
 #define CURRENT_YEAR 2024
-#define PRODUCER_COUNT 5
-#define CONSUMER_COUNT 5
+#define PRODUCER_COUNT 2
+#define CONSUMER_COUNT 3
 #define BUFFER_SIZE 100
 
 // make struct
@@ -225,6 +225,7 @@ pthread_mutex_t queue_capacity_check_lock;
 pthread_mutex_t data_counter_lock;
 
 size_t left_to_process_count = DATABASE_SIZE;
+size_t chunk_size = DATABASE_SIZE / PRODUCER_COUNT;
 
 int main(int argc, char **argv)
 {
@@ -239,8 +240,6 @@ int main(int argc, char **argv)
     data_entry_t found_data = {0};
 
     queue_t *data_queue = create_queue(BUFFER_SIZE);
-
-    size_t chunk_size = DATABASE_SIZE / PRODUCER_COUNT;
 
     // make pool of producers
     pthread_t producer_pool[PRODUCER_COUNT];
@@ -306,9 +305,10 @@ void *producer_handler(void *args_input)
     size_t index = args.db_start;
     while (!*args.stop_flag)
     {
+
         if (index == args.db_end + 1)
         {
-            return NULL;
+            break;
         }
 
         data_entry_t *data_holder = handled_malloc(sizeof(data_entry_t));
@@ -329,7 +329,13 @@ void *producer_handler(void *args_input)
         pthread_mutex_unlock(&queue_capacity_check_lock);
         ++index; // Move to the next database index
     }
-
+    pthread_mutex_lock(&data_counter_lock);
+    left_to_process_count -= chunk_size;
+    pthread_mutex_unlock(&data_counter_lock);
+    if (left_to_process_count <= 0)
+    {
+        *args.stop_flag = true;
+    }
     return NULL;
 }
 
@@ -342,6 +348,7 @@ void *consumer_handler(void *args_input)
 
     while (!*args.stop_flag)
     {
+
         // pthread_mutex_lock(&data_counter_lock);
         if (left_to_process_count <= 0)
         {
@@ -353,22 +360,20 @@ void *consumer_handler(void *args_input)
             break;
         }
         // pthread_mutex_unlock(&data_counter_lock);
+
         pthread_mutex_lock(&queue_push_lock);
 
-        if (args.queue->capacity == 0) // Checking if queue is empty
+        if (args.queue->size == 0) // Checking if queue is empty
         {
             pthread_mutex_unlock(&queue_push_lock);
-            sleep(5);
             continue;
         }
-
         data = (data_entry_t *)pop_from_queue(args.queue);
         if (data == NULL)
         {
-            pthread_mutex_unlock(&queue_push_lock);
-            continue;
+            printf("Caught null");
+            *args.stop_flag = true;
         }
-
         pthread_mutex_unlock(&queue_push_lock);
 
         bool is_found = is_needed_entry_count_stat(*data, args.options, stats);
@@ -383,6 +388,7 @@ void *consumer_handler(void *args_input)
         }
         ++j;
     }
+
     return NULL;
 }
 
