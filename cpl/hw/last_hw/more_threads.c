@@ -360,7 +360,7 @@ void *consumer_handler(void *args_input)
             *args.target_data = data;
             break;
         }
-
+    
         pthread_mutex_lock(&queue_push_lock);
 
         if (args.queue->size == 0) // Checking if queue is empty
