@@ -71,6 +71,7 @@ void *handled_realloc(void *source, size_t size)
     {
         free(source); // possible data loss
     }
+    source = NULL;
     Objects_to_free[obj_id] = temp;
     return temp;
 }
@@ -89,9 +90,14 @@ void free_objects()
 {
     for (size_t i = 0; i < used_object_to_free_id; ++i)
     {
-        free(Objects_to_free[i]);
+        if (Objects_to_free[i] != NULL)
+        {
+            free(Objects_to_free[i]);
+            Objects_to_free[i] = NULL;
+        }
     }
     free(Objects_to_free);
+    Objects_to_free = NULL;
 }
 #endif
 // --------------------------- Garbage collector end -----------------------------
@@ -111,7 +117,7 @@ void free_objects()
 #define DATABASE_FORMAT ".dat"
 #define CURRENT_YEAR 2024
 #define PRODUCER_COUNT 2
-#define CONSUMER_COUNT 3
+#define CONSUMER_COUNT 2
 #define BUFFER_SIZE 100
 
 // make struct
@@ -211,6 +217,8 @@ void print_border(access_stats_u access);
 void *producer_handler(void *args_input);
 
 void *consumer_handler(void *args_input);
+
+void initialize_stats_to_zero(stats_t *stats);
 
 data_entry_t get_one_entry(size_t index);
 
@@ -330,7 +338,9 @@ void *producer_handler(void *args_input)
         ++index; // Move to the next database index
     }
     pthread_mutex_lock(&data_counter_lock);
+    pthread_mutex_lock(&queue_push_lock);
     left_to_process_count -= chunk_size;
+    pthread_mutex_unlock(&queue_push_lock);
     pthread_mutex_unlock(&data_counter_lock);
     if (left_to_process_count <= 0)
     {
@@ -342,10 +352,9 @@ void *producer_handler(void *args_input)
 void *consumer_handler(void *args_input)
 {
     consumer_args_t args = *(consumer_args_t *)args_input;
-    stats_t *stats = handled_malloc(sizeof(stats_t));
-    data_entry_t *data = handled_malloc(sizeof(data_entry_t));
+    stats_t stats = {0};
+    data_entry_t data = {0};
     size_t j = 1;
-
     while (!*args.stop_flag)
     {
 
@@ -353,10 +362,10 @@ void *consumer_handler(void *args_input)
         if (left_to_process_count <= 0)
         {
             *args.stop_flag = true;
-            data->birth_day = 0;
-            data->birth_month = 0;
-            data->birth_year = 0;
-            *args.target_data = *data;
+            data.birth_day = 0;
+            data.birth_month = 0;
+            data.birth_year = 0;
+            *args.target_data = data;
             break;
         }
         // pthread_mutex_unlock(&data_counter_lock);
@@ -368,22 +377,23 @@ void *consumer_handler(void *args_input)
             pthread_mutex_unlock(&queue_push_lock);
             continue;
         }
-        data = (data_entry_t *)pop_from_queue(args.queue);
-        if (data == NULL)
+        data_entry_t *temp = (data_entry_t *)pop_from_queue(args.queue);
+        if (temp == NULL)
         {
             printf("Caught null");
             *args.stop_flag = true;
         }
         pthread_mutex_unlock(&queue_push_lock);
+        data = *temp;
 
-        bool is_found = is_needed_entry_count_stat(*data, args.options, stats);
+        bool is_found = is_needed_entry_count_stat(*temp, args.options, &stats);
 
         if (is_found)
         {
             *args.stop_flag = true;
-            *args.target_data = *data;
-            *args.target_stats = *stats;
-            args.target_stats->avg_salary = stats->sum_salary / j;
+            *args.target_data = data;
+            *args.target_stats = stats;
+            args.target_stats->avg_salary = stats.sum_salary / j;
             return NULL;
         }
         ++j;
@@ -392,14 +402,22 @@ void *consumer_handler(void *args_input)
     return NULL;
 }
 
+void initialize_stats_to_zero(stats_t *stats)
+{
+    if (stats != NULL)
+    {
+        memset(stats, 0, sizeof(stats_t));
+    }
+}
+
 void display_output(stats_t stats, data_entry_t data)
 {
-    printf("#Average salary: %i\n", stats.avg_salary);
     if (data.birth_day == 0 && data.birth_month == 0 && data.birth_year == 0)
     {
         printf("Not found\n");
         return;
     }
+    printf("#Average salary: %i\n", stats.avg_salary);
     print_histogram(stats);
     printf("#Found entry:\n");
     print_data(data);
