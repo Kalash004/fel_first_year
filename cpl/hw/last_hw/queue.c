@@ -14,10 +14,6 @@ queue_t *create_queue(int capacity)
 
 void delete_queue(queue_t *queue)
 {
-    for (size_t cell_id = queue->read; cell_id < queue->write; ++cell_id)
-    {
-        free(queue->pntr[cell_id]);
-    }
     free(queue->pntr);
     free(queue);
 }

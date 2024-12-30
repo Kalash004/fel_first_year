@@ -116,8 +116,8 @@ void free_objects()
 #define DATABASE_DIR "./database/"
 #define DATABASE_FORMAT ".dat"
 #define CURRENT_YEAR 2024
-#define PRODUCER_COUNT 2
-#define CONSUMER_COUNT 2
+#define PRODUCER_COUNT 4
+#define CONSUMER_COUNT 4
 #define BUFFER_SIZE 100
 
 // make struct
@@ -360,7 +360,7 @@ void *consumer_handler(void *args_input)
             *args.target_data = data;
             break;
         }
-    
+
         pthread_mutex_lock(&queue_push_lock);
 
         if (args.queue->size == 0) // Checking if queue is empty
