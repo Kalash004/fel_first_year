@@ -329,23 +329,16 @@ void *producer_handler(void *args_input)
             sleep(5);
         }
         pthread_mutex_lock(&queue_push_lock);
-        // pthread_mutex_lock(&data_counter_lock);
         push_to_queue(args.q, data_holder);
-        // --left_to_process_count;
-        // pthread_mutex_unlock(&data_counter_lock);
         pthread_mutex_unlock(&queue_push_lock);
         pthread_mutex_unlock(&queue_capacity_check_lock);
-        ++index; // Move to the next database index
+        ++index;
     }
     pthread_mutex_lock(&data_counter_lock);
     pthread_mutex_lock(&queue_push_lock);
     left_to_process_count -= chunk_size;
     pthread_mutex_unlock(&queue_push_lock);
     pthread_mutex_unlock(&data_counter_lock);
-    if (left_to_process_count <= 0)
-    {
-        *args.stop_flag = true;
-    }
     return NULL;
 }
 
@@ -358,7 +351,6 @@ void *consumer_handler(void *args_input)
     while (!*args.stop_flag)
     {
 
-        // pthread_mutex_lock(&data_counter_lock);
         if (left_to_process_count <= 0)
         {
             *args.stop_flag = true;
@@ -368,7 +360,6 @@ void *consumer_handler(void *args_input)
             *args.target_data = data;
             break;
         }
-        // pthread_mutex_unlock(&data_counter_lock);
 
         pthread_mutex_lock(&queue_push_lock);
 
@@ -377,16 +368,17 @@ void *consumer_handler(void *args_input)
             pthread_mutex_unlock(&queue_push_lock);
             continue;
         }
-        data_entry_t *temp = (data_entry_t *)pop_from_queue(args.queue);
+        void *temp = pop_from_queue(args.queue);
         if (temp == NULL)
         {
             printf("Caught null");
             *args.stop_flag = true;
         }
+        data_entry_t *temp_typed = (data_entry_t *)temp;
         pthread_mutex_unlock(&queue_push_lock);
-        data = *temp;
+        data = *temp_typed;
 
-        bool is_found = is_needed_entry_count_stat(*temp, args.options, &stats);
+        bool is_found = is_needed_entry_count_stat(*temp_typed, args.options, &stats);
 
         if (is_found)
         {

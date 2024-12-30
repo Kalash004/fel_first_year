@@ -1,7 +1,6 @@
 Hello,
-Done: One threaded variation of the program (found at one_thread.c)
-Closing to end with some bugs: Multi threaded variation of the program (found at more_threads.c)
+Both one threaded and multi threaded programs are done
 
+However multi threaded has some bugs.
 Currently known bugs: 
-1) Sometimes there is an overflow in stats - avg salary is negative and january histogram is unreasonably big
-2) Not implemented stop for not in database files
+1) Some times it doesnt find the data entry - might be due to some kind of corruption of memory in consumer or the program finishes early 
