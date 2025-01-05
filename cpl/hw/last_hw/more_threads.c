@@ -116,8 +116,8 @@ void free_objects()
 #define DATABASE_DIR "./database/"
 #define DATABASE_FORMAT ".dat"
 #define CURRENT_YEAR 2024
-#define PRODUCER_COUNT 4
-#define CONSUMER_COUNT 4
+#define PRODUCER_COUNT 2
+#define CONSUMER_COUNT 2
 #define BUFFER_SIZE 100
 
 // make struct
