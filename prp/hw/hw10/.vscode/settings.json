@@ -2,5 +2,8 @@
     "files.associations": {
         "*.ejs": "html",
         "stdbool.h": "c"
-    }
+    },
+    "cSpell.words": [
+        "dijstrik"
+    ]
 }

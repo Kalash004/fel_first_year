@@ -96,26 +96,37 @@ _Bool dijkstra_load_graph(const char *filename, void *dijkstra)
 // - function ----------------------------------------------------------------
 _Bool dijkstra_solve(void *dijkstra, int label)
 {
-   dijkstra_t *dij = (dijkstra_t *)dijkstra;
-   if (!dij || label < 0 || label >= dij->num_nodes)
+   dijkstra_t *dijstrik = (dijkstra_t *)dijkstra;
+   // Gates
+   if (!dijstrik)
    {
       return false;
    }
-   dij->start_node = label;
+   if (label < 0)
+   {
+      return false;
+   }
+   if (label >= dijstrik->num_nodes)
+   {
+      return false;
+   }
+   // Gates end
+   
+   dijstrik->start_node = label;
 
-   void *pq = pq_alloc(dij->num_nodes);
+   void *pq = pq_alloc(dijstrik->num_nodes);
 
-   dij->nodes[label].cost = 0; // initialize the starting node
+   dijstrik->nodes[label].cost = 0; // initialize the starting node
    pq_push(pq, label, 0);
 
    int cur_label;
    while (!pq_is_empty(pq) && pq_pop(pq, &cur_label))
    {
-      node_t *cur = &(dij->nodes[cur_label]);
+      node_t *cur = &(dijstrik->nodes[cur_label]);
       for (int i = 0; i < cur->edge_count; ++i)
-      {                                                            // relax all children
-         edge_t *edge = &(dij->graph->edges[cur->edge_start + i]); // avoid copying
-         node_t *to = &(dij->nodes[edge->to]);
+      {                                                                 // relax all children
+         edge_t *edge = &(dijstrik->graph->edges[cur->edge_start + i]); // avoid copying
+         node_t *to = &(dijstrik->nodes[edge->to]);
          const int cost = cur->cost + edge->cost;
          if (to->cost == -1)
          { // the node to has not been visited yet
@@ -177,7 +188,7 @@ void dijkstra_free(void *dijkstra)
 }
 
 /*
- * Retrived the solution found by the function dijkstra_solve()
+ * Retrieve the solution found by the function dijkstra_solve()
  * It is assumed the passed argument solution[][3] is properly allocated,
  * and thus the internal solution of the dijkstra can used to fill the
  * solution[][3].

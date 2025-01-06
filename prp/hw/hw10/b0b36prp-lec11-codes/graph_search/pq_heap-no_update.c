@@ -179,16 +179,30 @@ _Bool pq_update(void *_pq, int label, int cost)
    int idx = pq->heapIDX[label];
    pq->cost[idx] = cost; // update the cost, but heap property is not satified
    // assert(pq_is_heap(pq, 0));
+   bool moved_up = false;
    while (cost < pq->cost[GET_PARENT(idx)])
    {
       pq_swap(pq, idx, GET_PARENT(idx));
       idx = pq->heapIDX[label];
+      moved_up = true;
    }
-   while (cost)
+   if (moved_up)
+      return true; // finish
+
+   while (cost > pq->cost[GET_LEFT(idx)] || cost > pq->cost[GET_LEFT(idx) + 1])
    {
-      /* code */
+      if (cost > pq->cost[GET_LEFT(idx)])
+      {
+         if (cost > pq->cost[GET_LEFT(idx) + 1])
+         {
+            pq_swap(pq, idx, GET_PARENT(idx) + 1);
+            idx = pq->heapIDX[label];
+            continue;
+         }
+         pq_swap(pq, idx, GET_PARENT(idx));
+         idx = pq->heapIDX[label];
+      }
    }
-   
 
    return true;
 }
