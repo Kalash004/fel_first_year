@@ -48,49 +48,55 @@ void *dijkstra_init(void)
 // - function ----------------------------------------------------------------
 _Bool dijkstra_load_graph(const char *filename, void *dijkstra)
 {
-   _Bool ret = false;
    dijkstra_t *dij = (dijkstra_t *)dijkstra;
-   if (
-       dij && dij->graph &&
-       load_graph_simple(filename, dij->graph))
-   { // edges has not been loaded
-      // dijkstra_t and graph has been allocated and edges have been loaded here
-      // go through the edges and create array of nodes with indexing to edges
-      // 1st get the maximal number of nodes
-      int m = -1;
-      for (int i = 0; i < dij->graph->num_edges; ++i)
-      {
-         const edge_t *const e = &(dij->graph->edges[i]); // use pointer to avoid copying
-         m = m < e->from ? e->from : m;
-         m = m < e->to ? e->to : m;
-      }
-      m += 1; // m is the index therefore we need +1 for label 0
-      dij->nodes = myMalloc(sizeof(node_t) * m);
-
-      dij->num_nodes = m;
-
-      // 2nd initialization of the nodes
-      for (int i = 0; i < m; ++i)
-      {
-         dij->nodes[i].edge_start = -1;
-         dij->nodes[i].edge_count = 0;
-         dij->nodes[i].parent = -1;
-         dij->nodes[i].cost = -1;
-      }
-
-      // 3nd add edges to the nodes
-      for (int i = 0; i < dij->graph->num_edges; ++i)
-      {
-         int cur = dij->graph->edges[i].from;
-         if (dij->nodes[cur].edge_start == -1)
-         {                                  // first edge
-            dij->nodes[cur].edge_start = i; // mark the first edge in the array of edges
-         }
-         dij->nodes[cur].edge_count += 1; // increase number of edges
-      }
-      ret = true;
+   if (!dij)
+   {
+      return false;
    }
-   return ret;
+   if (!dij->graph)
+   {
+      return false;
+   }
+   if (!load_graph_simple(filename, dij->graph))
+   {
+      return false;
+   }
+   // edges has not been loaded
+   // dijkstra_t and graph has been allocated and edges have been loaded here
+   // go through the edges and create array of nodes with indexing to edges
+   // 1st get the maximal number of nodes
+   int m = -1;
+   for (int i = 0; i < dij->graph->num_edges; ++i)
+   {
+      const edge_t *const e = &(dij->graph->edges[i]); // use pointer to avoid copying
+      m = m < e->from ? e->from : m;
+      m = m < e->to ? e->to : m;
+   }
+   m += 1; // m is the index therefore we need +1 for label 0
+   dij->nodes = myMalloc(sizeof(node_t) * m);
+
+   dij->num_nodes = m;
+
+   // 2nd initialization of the nodes
+   for (int i = 0; i < m; ++i)
+   {
+      dij->nodes[i].edge_start = -1;
+      dij->nodes[i].edge_count = 0;
+      dij->nodes[i].parent = -1;
+      dij->nodes[i].cost = -1;
+   }
+
+   // 3nd add edges to the nodes
+   for (int i = 0; i < dij->graph->num_edges; ++i)
+   {
+      int cur = dij->graph->edges[i].from;
+      if (dij->nodes[cur].edge_start == -1)
+      {                                  // first edge
+         dij->nodes[cur].edge_start = i; // mark the first edge in the array of edges
+      }
+      dij->nodes[cur].edge_count += 1; // increase number of edges
+   }
+   return true;
 }
 
 // - function ----------------------------------------------------------------
@@ -111,7 +117,7 @@ _Bool dijkstra_solve(void *dijkstra, int label)
       return false;
    }
    // Gates end
-   
+
    dijstrik->start_node = label;
 
    void *pq = pq_alloc(dijstrik->num_nodes);
@@ -187,19 +193,29 @@ void dijkstra_free(void *dijkstra)
    }
 }
 
-/*
- * Retrieve the solution found by the function dijkstra_solve()
- * It is assumed the passed argument solution[][3] is properly allocated,
- * and thus the internal solution of the dijkstra can used to fill the
- * solution[][3].
- *
- * n - number of nodes, i.e., size of the array
- *
- * return: true on success; false otherwise
- */
-// Uncomment for the HW 10
 _Bool dijkstra_get_solution(const void *dijkstra, int n, int solution[][3])
 {
+   if (!dijkstra)
+   {
+      return false;
+   }
+   dijkstra_t *dijk = (dijkstra_t *)dijkstra;
+   if (n != dijk->num_nodes)
+   {
+      return false;
+   }
+   if (!solution)
+   {
+      return false;
+   }
+
+   for (int i = 0; i < n; ++i)
+   {
+      solution[i][0] = i;
+      solution[i][1] = dijk->nodes[i].cost;
+      solution[i][2] = dijk->nodes[i].parent;
+   }
+   return true;
 }
 
 /*
@@ -216,5 +232,27 @@ _Bool dijkstra_get_solution(const void *dijkstra, int n, int solution[][3])
 // Uncomment for the HW 10
 _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
 {
+   dijkstra_t *dij = (dijkstra_t *)dijkstra;
+   if (!dij)
+   {
+      return false;
+   }
+   if (!dij->graph)
+   {
+      return false;
+   }
+   int count = 0;
+
+   dij->graph->num_edges = e;
+   enlarge_graph(dij->graph);
+
+   edge_t *edge_list = dij->graph->edges;
+   for (int i = 0; i < e; ++i)
+   {
+      edge_list[i].from = edges[i][0];
+      edge_list[i].to = edges[i][1];
+      edge_list[i].cost = edges[i][2];
+   }
+   return true;
 }
 /* end of dijkstra.c */
