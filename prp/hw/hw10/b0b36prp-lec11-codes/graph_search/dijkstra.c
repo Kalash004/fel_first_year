@@ -241,7 +241,6 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
    {
       return false;
    }
-   int count = 0;
 
    dij->graph->num_edges = e;
    enlarge_graph(dij->graph);

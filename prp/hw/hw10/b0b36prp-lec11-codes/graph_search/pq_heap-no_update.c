@@ -177,31 +177,35 @@ _Bool pq_update(void *_pq, int label, int cost)
       return false;
 
    int idx = pq->heapIDX[label];
-   pq->cost[idx] = cost; // update the cost, but heap property is not satified
-   // assert(pq_is_heap(pq, 0));
-   bool moved_up = false;
-   while (cost < pq->cost[GET_PARENT(idx)])
+   pq->cost[idx] = cost; // Update the cost
+
+   // Bubble up if necessary
+   while (idx > 0 && pq->cost[idx] < pq->cost[GET_PARENT(idx)])
    {
       pq_swap(pq, idx, GET_PARENT(idx));
-      idx = pq->heapIDX[label];
-      moved_up = true;
+      idx = GET_PARENT(idx);
    }
-   if (moved_up)
-      return true; // finish
 
-   while (cost > pq->cost[GET_LEFT(idx)] || cost > pq->cost[GET_LEFT(idx) + 1])
+   // Bubble down if necessary
+   while (true)
    {
-      if (cost > pq->cost[GET_LEFT(idx)])
-      {
-         if (cost > pq->cost[GET_LEFT(idx) + 1])
-         {
-            pq_swap(pq, idx, GET_PARENT(idx) + 1);
-            idx = pq->heapIDX[label];
-            continue;
-         }
-         pq_swap(pq, idx, GET_PARENT(idx));
-         idx = pq->heapIDX[label];
-      }
+      int left = GET_LEFT(idx);
+      int right = left + 1;
+      int smallest = idx;
+
+      // Check the left child
+      if (left < pq->len && pq->cost[left] < pq->cost[smallest])
+         smallest = left;
+
+      // Check the right child
+      if (right < pq->len && pq->cost[right] < pq->cost[smallest])
+         smallest = right;
+
+      if (smallest == idx) // Done
+         break;
+
+      pq_swap(pq, idx, smallest);
+      idx = smallest;
    }
 
    return true;
