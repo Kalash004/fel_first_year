@@ -155,7 +155,7 @@ void free_graph(graph_t **graph)
 
 void load_txt(const char *fname, graph_t *graph)
 {
-
+    printf("BB");
     FILE *f = fopen(fname, "r");
     if (f == NULL)
     {

@@ -231,25 +231,68 @@ _Bool dijkstra_get_solution(const void *dijkstra, int n, int solution[][3])
 _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
 {
    dijkstra_t *dij = (dijkstra_t *)dijkstra;
-   if (!dij)
-   {
-      return false;
-   }
-   if (!dij->graph)
+   if (!dij || !dij->graph || e <= 0 || !edges)
    {
       return false;
    }
 
+   // Alokace paměti pro hrany
+   dij->graph->edges = myMalloc(sizeof(edge_t) * e);
+   if (!dij->graph->edges)
+   {
+      return false;
+   }
+
+   // Nastavení hran
    dij->graph->num_edges = e;
-   enlarge_graph(dij->graph);
-
-   edge_t *edge_list = dij->graph->edges;
+   int max_node = -1;
    for (int i = 0; i < e; ++i)
    {
-      edge_list[i].from = edges[i][0];
-      edge_list[i].to = edges[i][1];
-      edge_list[i].cost = edges[i][2];
+      dij->graph->edges[i].from = edges[i][0];
+      dij->graph->edges[i].to = edges[i][1];
+      dij->graph->edges[i].cost = edges[i][2];
+
+      // Aktualizace maximálního indexu vrcholu
+      if (edges[i][0] > max_node)
+      {
+         max_node = edges[i][0];
+      }
+      if (edges[i][1] > max_node)
+      {
+         max_node = edges[i][1];
+      }
    }
+
+   // Alokace a inicializace vrcholů
+   dij->num_nodes = max_node + 1;
+   dij->nodes = myMalloc(sizeof(node_t) * dij->num_nodes);
+   if (!dij->nodes)
+   {
+      free(dij->graph->edges);
+      dij->graph->edges = NULL;
+      return false;
+   }
+
+   // Inicializace vrcholů
+   for (int i = 0; i < dij->num_nodes; ++i)
+   {
+      dij->nodes[i].edge_start = -1;
+      dij->nodes[i].edge_count = 0;
+      dij->nodes[i].parent = -1;
+      dij->nodes[i].cost = -1;
+   }
+
+   // Nastavení hran na vrcholy
+   for (int i = 0; i < e; ++i)
+   {
+      int from = dij->graph->edges[i].from;
+      if (dij->nodes[from].edge_start == -1)
+      {
+         dij->nodes[from].edge_start = i;
+      }
+      dij->nodes[from].edge_count++;
+   }
+
    return true;
 }
 /* end of dijkstra.c */
