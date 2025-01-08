@@ -7,7 +7,7 @@
 #include <stdio.h>
 #endif
 
-#define MALLOCED_OJB_ARR_SIZE 1000
+#define MALLOCED_OJB_ARR_SIZE 10
 
 void **Objects_to_free;
 size_t size_objects_to_free = 0;
@@ -93,14 +93,9 @@ size_t find_malloced_obj_id(void *source)
 void free_one_object(void *target)
 {
     size_t obj_id = find_malloced_obj_id(target);
-    if (obj_id == MALLOCED_OJB_ARR_SIZE)
+    if (obj_id == MALLOCED_OJB_ARR_SIZE + 1)
     {
         printf("Error while freeing object - obj not in array");
-        exit(-11);
-    }
-    if (Objects_to_free[obj_id] == NULL)
-    {
-        printf("Error while freeing object - obj already freed");
         exit(-11);
     }
     free(Objects_to_free[obj_id]);
@@ -117,6 +112,17 @@ void free_objects()
     }
     free(Objects_to_free);
 }
+#endif
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "my_malloc.h"
+#include "graph.h"
+
+#ifndef INIT_SIZE
+#define INIT_SIZE 100
 #endif
 
 #include "graph.h"
@@ -135,6 +141,7 @@ graph_t *allocate_graph()
 
     target->edges = edges;
     target->num_edges = edges_count;
+    target->capacity = 0;
 
     ++graph_count;
 
@@ -143,14 +150,7 @@ graph_t *allocate_graph()
 
 void free_graph(graph_t **graph)
 {
-    graph_t *g = graph[0];
-    free_one_object(g->edges);
-    free_one_object(g);
-    --graph_count;
-    if (graph_count == 0)
-    {
-        free_objects();
-    }
+    free_objects();
 }
 
 void load_txt(const char *fname, graph_t *graph)
@@ -262,10 +262,15 @@ int read_int(FILE *f)
     char byte3;
     char byte4;
 
-    fread(&byte1, 1, 1, f);
-    fread(&byte2, 1, 1, f);
-    fread(&byte3, 1, 1, f);
-    fread(&byte4, 1, 1, f);
+    int ret1 = fread(&byte1, 1, 1, f);
+    int ret2 = fread(&byte2, 1, 1, f);
+    int ret3 = fread(&byte3, 1, 1, f);
+    int ret4 = fread(&byte4, 1, 1, f);
+
+    if (ret1 || ret2 || ret3 || ret4)
+    {
+        printf("skibidi");
+    }
 
     char tmp[4] = {byte4, byte3, byte2, byte1};
     int *fun = (int *)tmp;
@@ -387,4 +392,28 @@ void write_int(int source, FILE *file)
     fwrite(&byte3, sizeof(char), 1, file);
     fwrite(&byte2, sizeof(char), 1, file);
     fwrite(&byte1, sizeof(char), 1, file);
+}
+
+graph_t *enlarge_graph(graph_t *g)
+{
+    assert(g != NULL);
+    int n = (g->capacity == 0) ? INIT_SIZE : g->capacity * 2; /* double the memory */
+
+    edge_t *e = myMalloc(n * sizeof(edge_t));
+    memcpy(e, g->edges, g->num_edges * sizeof(edge_t));
+    free(g->edges);
+    g->edges = e;
+    g->capacity = n;
+    return g;
+}
+
+void print_graph(graph_t *g)
+{
+    assert(g != NULL);
+    fprintf(stderr, "Graph has %d edges and %d edges are allocated\n", g->num_edges, g->capacity);
+    edge_t *e = g->edges;
+    for (int i = 0; i < g->num_edges; ++i, ++e)
+    {
+        printf("%d %d %d\n", e->from, e->to, e->cost);
+    }
 }

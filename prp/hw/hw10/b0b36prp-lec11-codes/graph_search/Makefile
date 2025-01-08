@@ -12,7 +12,7 @@ ifeq ($(OS),Linux)
 endif
 
 #OBJS=$(patsubst %.c,%.o,$(wildcard *.c))
-OBJS=dijkstra.o my_malloc.o graph_utils.o pq_heap-no_update.o load_simple.o
+OBJS=dijkstra.o my_malloc.o pq_heap.o load_simple.o graph.o
 
 TARGET=tgraph_search
 

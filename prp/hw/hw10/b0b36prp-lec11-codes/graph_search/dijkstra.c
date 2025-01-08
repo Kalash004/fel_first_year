@@ -1,16 +1,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <assert.h>
 
 #include "dijkstra.h"
 #include "graph.h"
-#include "graph_utils.h"
 #include "my_malloc.h"
-
 #include "pq_heap.h"
-
 #include "load_simple.h"
 
 typedef struct
@@ -48,55 +44,49 @@ void *dijkstra_init(void)
 // - function ----------------------------------------------------------------
 _Bool dijkstra_load_graph(const char *filename, void *dijkstra)
 {
+   _Bool ret = false;
    dijkstra_t *dij = (dijkstra_t *)dijkstra;
-   if (!dij)
-   {
-      return false;
-   }
-   if (!dij->graph)
-   {
-      return false;
-   }
-   if (!load_graph_simple(filename, dij->graph))
-   {
-      return false;
-   }
-   // edges has not been loaded
-   // dijkstra_t and graph has been allocated and edges have been loaded here
-   // go through the edges and create array of nodes with indexing to edges
-   // 1st get the maximal number of nodes
-   int m = -1;
-   for (int i = 0; i < dij->graph->num_edges; ++i)
-   {
-      const edge_t *const e = &(dij->graph->edges[i]); // use pointer to avoid copying
-      m = m < e->from ? e->from : m;
-      m = m < e->to ? e->to : m;
-   }
-   m += 1; // m is the index therefore we need +1 for label 0
-   dij->nodes = myMalloc(sizeof(node_t) * m);
-
-   dij->num_nodes = m;
-
-   // 2nd initialization of the nodes
-   for (int i = 0; i < m; ++i)
-   {
-      dij->nodes[i].edge_start = -1;
-      dij->nodes[i].edge_count = 0;
-      dij->nodes[i].parent = -1;
-      dij->nodes[i].cost = -1;
-   }
-
-   // 3nd add edges to the nodes
-   for (int i = 0; i < dij->graph->num_edges; ++i)
-   {
-      int cur = dij->graph->edges[i].from;
-      if (dij->nodes[cur].edge_start == -1)
-      {                                  // first edge
-         dij->nodes[cur].edge_start = i; // mark the first edge in the array of edges
+   if (
+       dij && dij->graph &&
+       load_graph_simple(filename, dij->graph))
+   { // edges has not been loaded
+      // dijkstra_t and graph has been allocated and edges have been loaded here
+      // go through the edges and create array of nodes with indexing to edges
+      // 1st get the maximal number of nodes
+      int m = -1;
+      for (int i = 0; i < dij->graph->num_edges; ++i)
+      {
+         const edge_t *const e = &(dij->graph->edges[i]); // use pointer to avoid copying
+         m = m < e->from ? e->from : m;
+         m = m < e->to ? e->to : m;
       }
-      dij->nodes[cur].edge_count += 1; // increase number of edges
+      m += 1; // m is the index therefore we need +1 for label 0
+      dij->nodes = myMalloc(sizeof(node_t) * m);
+
+      dij->num_nodes = m;
+
+      // 2nd initialization of the nodes
+      for (int i = 0; i < m; ++i)
+      {
+         dij->nodes[i].edge_start = -1;
+         dij->nodes[i].edge_count = 0;
+         dij->nodes[i].parent = -1;
+         dij->nodes[i].cost = -1;
+      }
+
+      // 3nd add edges to the nodes
+      for (int i = 0; i < dij->graph->num_edges; ++i)
+      {
+         int cur = dij->graph->edges[i].from;
+         if (dij->nodes[cur].edge_start == -1)
+         {                                  // first edge
+            dij->nodes[cur].edge_start = i; // mark the first edge in the array of edges
+         }
+         dij->nodes[cur].edge_count += 1; // increase number of edges
+      }
+      ret = true;
    }
-   return true;
+   return ret;
 }
 
 // - function ----------------------------------------------------------------
@@ -183,12 +173,20 @@ void dijkstra_free(void *dijkstra)
    {
       if (dij->graph)
       {
+         if (dij->graph->edges)
+         {
+            free(dij->graph->edges);
+            dij->graph->edges = NULL;
+         }
+
          free_graph(&(dij->graph));
       }
+
       if (dij->nodes)
       {
          free(dij->nodes);
       }
+
       free(dij);
    }
 }

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "graph_utils.h"
+#include "graph.h"
 
 int load_graph_simple(const char *fname, graph_t *g)
 {

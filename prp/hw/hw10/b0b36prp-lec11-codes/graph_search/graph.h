@@ -38,4 +38,8 @@ void save_bin(const graph_t *const graph, const char *fname);
 
 void write_int(int source, FILE *file);
 
+graph_t *enlarge_graph(graph_t *g);
+
+void print_graph(graph_t *g);
+
 #endif
