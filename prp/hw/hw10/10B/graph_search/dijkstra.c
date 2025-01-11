@@ -10,6 +10,14 @@
 #include "load_simple.h"
 #include <string.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <unistd.h>
+
 typedef struct
 {
    int edge_start; // index to the first edge in the array of edges (-1 if does not exist)
@@ -47,8 +55,7 @@ _Bool dijkstra_load_graph(const char *filename, void *dijkstra)
 {
    _Bool ret = false;
    dijkstra_t *dij = (dijkstra_t *)dijkstra;
-   if (
-       dij && dij->graph)
+   if (dij && dij->graph)
    {
       load_txt(filename, (graph_t *)dij->graph);
       int m = -1;
@@ -156,9 +163,10 @@ _Bool dijkstra_save_path(const void *dijkstra, const char *filename)
    {
       return false;
    }
-   size_t buf_size = 1000000;
+   size_t buf_size = 1000;
    size_t cursor = 0;
    char *buffer = myMalloc(buf_size * sizeof(char));
+   memset(buffer, 0, buf_size);
    for (int i = 0; i < dij->num_nodes; ++i)
    {
       if (buf_size - cursor < 100)
@@ -175,28 +183,31 @@ _Bool dijkstra_save_path(const void *dijkstra, const char *filename)
       }
 
       int shift = 0;
-      int dig_count1 = intToStr_dijk(i, buffer, 10, cursor + shift);
+      int dig_count1 = get_digit_count(i);
+      fast_itoa(i, (buffer + cursor + shift));
       shift += dig_count1;
       buffer[cursor + shift] = ' ';
       shift += 1;
 
       int end = dij->nodes[i].cost;
-      int dig_count2 = intToStr_dijk(end, buffer, 10, cursor + shift);
+      int dig_count2 = get_digit_count(end);
+      fast_itoa(end, (buffer + cursor + shift));
       shift += dig_count2;
       buffer[cursor + shift] = ' ';
       shift += 1;
 
       int weight = dij->nodes[i].parent;
-      int dig_count3 = intToStr_dijk(weight, buffer, 10, cursor + shift);
+      int dig_count3 = get_digit_count(weight);
+      fast_itoa(weight, (buffer + cursor + shift));
       shift += dig_count3;
       buffer[cursor + shift] = '\n';
       shift += 1;
 
       cursor += shift;
    }
-   buffer[cursor] = '\0';
-   fwrite(buffer, sizeof(char), cursor + 1, f);
+   write_buffer_to_file(filename, buffer, cursor);
    ret = fclose(f) == 0;
+   free(buffer);
    return ret;
 }
 
@@ -244,6 +255,118 @@ int intToStr_dijk(int num, char *str, int buf_size, int start)
       ++digits;
 
    return digits;
+}
+
+int get_digit_count(int number)
+{
+   bool is_negative = false;
+   if (number < 0)
+   {
+      is_negative = true;
+      number = -number;
+   }
+   int temp = number;
+   int digits = 0;
+   do
+   {
+      ++digits;
+      temp /= 10;
+   } while (temp != 0);
+   digits = (is_negative) ? digits + 1 : digits;
+   return digits;
+}
+
+void fast_itoa(int value, char *buffer)
+{
+   static const char digits[] = "0123456789";
+   char *p = buffer;
+   if (value == 0)
+   {
+      *p++ = '0';
+      *p = '\0';
+      return;
+   }
+
+   int is_negative = 0;
+   if (value < 0)
+   {
+      is_negative = 1;
+      value = -value;
+   }
+
+   while (value > 0)
+   {
+      *p++ = digits[value % 10];
+      value /= 10;
+   }
+
+   if (is_negative)
+   {
+      *p++ = '-';
+   }
+
+   char *start = buffer;
+   char *end = p - 1;
+   while (start < end)
+   {
+      char tmp = *start;
+      *start++ = *end;
+      *end-- = tmp;
+   }
+}
+
+void write_buffer_to_file(const char *filename, const char *buffer, size_t buffer_size)
+{
+   int fd;
+   void *map;
+
+   fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0644);
+   if (fd == -1)
+   {
+      perror("open");
+      exit(EXIT_FAILURE);
+   }
+
+   if (lseek(fd, buffer_size - 1, SEEK_SET) == -1)
+   {
+      perror("lseek");
+      close(fd);
+      exit(EXIT_FAILURE);
+   }
+
+   // Write a dummy byte to expand the file size to at least `buffer_size`
+   if (write(fd, "", 1) != 1)
+   {
+      perror("write");
+      close(fd);
+      exit(EXIT_FAILURE);
+   }
+
+   // Memory-map the file
+   map = mmap(NULL, buffer_size, PROT_WRITE, MAP_SHARED, fd, 0);
+   if (map == MAP_FAILED)
+   {
+      perror("mmap");
+      close(fd);
+      exit(EXIT_FAILURE);
+   }
+
+   // Copy buffer to the mapped memory
+   memcpy(map, buffer, buffer_size);
+
+   // Ensure changes are flushed to disk
+   if (msync(map, buffer_size, MS_SYNC) == -1)
+   {
+      perror("msync");
+   }
+
+   // Unmap memory and close the file descriptor
+   if (munmap(map, buffer_size) == -1)
+   {
+      perror("munmap");
+   }
+
+   close(fd);
 }
 
 // - function ----------------------------------------------------------------

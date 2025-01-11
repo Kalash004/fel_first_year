@@ -1,5 +1,6 @@
 #ifndef __DIJKSTRA_H__
 #define __DIJKSTRA_H__
+#include <stdlib.h>
 
 /*
  * Initialize structure for storing graph, solution, and eventual
@@ -74,6 +75,12 @@ _Bool dijkstra_save_path(const void *dijkstra, const char *filename);
 void dijkstra_free(void *dijkstra);
 
 int intToStr_dijk(int num, char *str, int buf_size, int start);
+
+int get_digit_count(int number);
+
+void fast_itoa(int value, char *buffer);
+
+void write_buffer_to_file(const char *filename, const char *buffer, size_t buffer_size);
 #endif
 
 /* end of dijkstra.h */
