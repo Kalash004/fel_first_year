@@ -170,15 +170,6 @@ void dijkstra_free(void *dijkstra)
    {
       if (dij->graph)
       {
-<<<<<<< HEAD
-         if (dij->graph->edges)
-         {
-            free(dij->graph->edges);
-            dij->graph->edges = NULL;
-         }
-
-=======
->>>>>>> c975288 (prp/hw10b man crazy)
          free_graph(&(dij->graph));
       }
 
@@ -236,19 +227,7 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       return false;
    }
 
-<<<<<<< HEAD
-   // Alokace paměti pro hrany
    dij->graph->edges = myMalloc(sizeof(edge_t) * e);
-   if (!dij->graph->edges)
-   {
-      return false;
-   }
-
-   // Nastavení hran
-=======
-   dij->graph->edges = myMalloc(sizeof(edge_t) * e);
-
->>>>>>> c975288 (prp/hw10b man crazy)
    dij->graph->num_edges = e;
    int max_node = -1;
    for (int i = 0; i < e; ++i)
@@ -257,10 +236,6 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       dij->graph->edges[i].to = edges[i][1];
       dij->graph->edges[i].cost = edges[i][2];
 
-<<<<<<< HEAD
-      // Aktualizace maximálního indexu vrcholu
-=======
->>>>>>> c975288 (prp/hw10b man crazy)
       if (edges[i][0] > max_node)
       {
          max_node = edges[i][0];
@@ -271,10 +246,6 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       }
    }
 
-<<<<<<< HEAD
-   // Alokace a inicializace vrcholů
-=======
->>>>>>> c975288 (prp/hw10b man crazy)
    dij->num_nodes = max_node + 1;
    dij->nodes = myMalloc(sizeof(node_t) * dij->num_nodes);
    if (!dij->nodes)
@@ -284,10 +255,6 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       return false;
    }
 
-<<<<<<< HEAD
-   // Inicializace vrcholů
-=======
->>>>>>> c975288 (prp/hw10b man crazy)
    for (int i = 0; i < dij->num_nodes; ++i)
    {
       dij->nodes[i].edge_start = -1;
@@ -296,10 +263,6 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       dij->nodes[i].cost = -1;
    }
 
-<<<<<<< HEAD
-   // Nastavení hran na vrcholy
-=======
->>>>>>> c975288 (prp/hw10b man crazy)
    for (int i = 0; i < e; ++i)
    {
       int from = dij->graph->edges[i].from;
