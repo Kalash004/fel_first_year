@@ -47,12 +47,9 @@ _Bool dijkstra_load_graph(const char *filename, void *dijkstra)
    _Bool ret = false;
    dijkstra_t *dij = (dijkstra_t *)dijkstra;
    if (
-       dij && dij->graph &&
-       load_graph_simple(filename, dij->graph))
-   { // edges has not been loaded
-      // dijkstra_t and graph has been allocated and edges have been loaded here
-      // go through the edges and create array of nodes with indexing to edges
-      // 1st get the maximal number of nodes
+       dij && dij->graph)
+   {
+      load_txt(filename, (graph_t *)dij->graph);
       int m = -1;
       for (int i = 0; i < dij->graph->num_edges; ++i)
       {
@@ -173,12 +170,15 @@ void dijkstra_free(void *dijkstra)
    {
       if (dij->graph)
       {
+<<<<<<< HEAD
          if (dij->graph->edges)
          {
             free(dij->graph->edges);
             dij->graph->edges = NULL;
          }
 
+=======
+>>>>>>> c975288 (prp/hw10b man crazy)
          free_graph(&(dij->graph));
       }
 
@@ -236,6 +236,7 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       return false;
    }
 
+<<<<<<< HEAD
    // Alokace paměti pro hrany
    dij->graph->edges = myMalloc(sizeof(edge_t) * e);
    if (!dij->graph->edges)
@@ -244,6 +245,10 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
    }
 
    // Nastavení hran
+=======
+   dij->graph->edges = myMalloc(sizeof(edge_t) * e);
+
+>>>>>>> c975288 (prp/hw10b man crazy)
    dij->graph->num_edges = e;
    int max_node = -1;
    for (int i = 0; i < e; ++i)
@@ -252,7 +257,10 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       dij->graph->edges[i].to = edges[i][1];
       dij->graph->edges[i].cost = edges[i][2];
 
+<<<<<<< HEAD
       // Aktualizace maximálního indexu vrcholu
+=======
+>>>>>>> c975288 (prp/hw10b man crazy)
       if (edges[i][0] > max_node)
       {
          max_node = edges[i][0];
@@ -263,7 +271,10 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       }
    }
 
+<<<<<<< HEAD
    // Alokace a inicializace vrcholů
+=======
+>>>>>>> c975288 (prp/hw10b man crazy)
    dij->num_nodes = max_node + 1;
    dij->nodes = myMalloc(sizeof(node_t) * dij->num_nodes);
    if (!dij->nodes)
@@ -273,7 +284,10 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       return false;
    }
 
+<<<<<<< HEAD
    // Inicializace vrcholů
+=======
+>>>>>>> c975288 (prp/hw10b man crazy)
    for (int i = 0; i < dij->num_nodes; ++i)
    {
       dij->nodes[i].edge_start = -1;
@@ -282,7 +296,10 @@ _Bool dijkstra_set_graph(int e, int edges[][3], void *dijkstra)
       dij->nodes[i].cost = -1;
    }
 
+<<<<<<< HEAD
    // Nastavení hran na vrcholy
+=======
+>>>>>>> c975288 (prp/hw10b man crazy)
    for (int i = 0; i < e; ++i)
    {
       int from = dij->graph->edges[i].from;

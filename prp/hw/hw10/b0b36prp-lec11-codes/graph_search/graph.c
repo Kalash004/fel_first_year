@@ -92,14 +92,14 @@ size_t find_malloced_obj_id(void *source)
 
 void free_one_object(void *target)
 {
-    size_t obj_id = find_malloced_obj_id(target);
-    if (obj_id == MALLOCED_OJB_ARR_SIZE + 1)
+    if (target == NULL)
     {
-        printf("Error while freeing object - obj not in array");
-        exit(-11);
+        return;
     }
+    size_t obj_id = find_malloced_obj_id(target);
     free(Objects_to_free[obj_id]);
     Objects_to_free[obj_id] = NULL;
+    target = NULL;
 }
 
 void free_objects()
@@ -109,6 +109,7 @@ void free_objects()
         if (Objects_to_free[i] == NULL)
             continue;
         free(Objects_to_free[i]);
+        Objects_to_free[i] = NULL;
     }
     free(Objects_to_free);
 }
@@ -121,17 +122,27 @@ void free_objects()
 #include "my_malloc.h"
 #include "graph.h"
 
+<<<<<<< HEAD
 #ifndef INIT_SIZE
 #define INIT_SIZE 100
 #endif
 
+    == == ==
+    =
+>>>>>>> c975288 (prp/hw10b man crazy)
 #include "graph.h"
 #include <stdbool.h>
 #include <stdio.h>
 
+        <<<<<<<HEAD
 #define START_BUF_SIZE 1
+                   == == ==
+               =
+#define START_BUF_SIZE 250
+                   >>>>>>>
+        c975288(prp / hw10b man crazy)
 
-size_t graph_count = 0;
+            size_t graph_count = 0;
 
 graph_t *allocate_graph()
 {
@@ -150,12 +161,36 @@ graph_t *allocate_graph()
 
 void free_graph(graph_t **graph)
 {
+<<<<<<< HEAD
     free_objects();
+=======
+    if (!graph)
+        return;
+    graph_t *target = *graph;
+    if (!target)
+        return;
+
+    if (graph_count > 1)
+    {
+        for (int i = 0; i < (*graph)->num_edges; ++i)
+        {
+            free_one_object((void *)(&target->edges[i]));
+        }
+        free_one_object((void *)target);
+    }
+    else
+    {
+        free_objects();
+    }
+>>>>>>> c975288 (prp/hw10b man crazy)
 }
 
 void load_txt(const char *fname, graph_t *graph)
 {
+<<<<<<< HEAD
     printf("BB");
+=======
+>>>>>>> c975288 (prp/hw10b man crazy)
     FILE *f = fopen(fname, "r");
     if (f == NULL)
     {
@@ -397,7 +432,11 @@ void write_int(int source, FILE *file)
 graph_t *enlarge_graph(graph_t *g)
 {
     assert(g != NULL);
+<<<<<<< HEAD
     int n = (g->capacity == 0) ? INIT_SIZE : g->capacity * 2; /* double the memory */
+=======
+    int n = (g->capacity == 0) ? START_BUF_SIZE : g->capacity * 2; /* double the memory */
+>>>>>>> c975288 (prp/hw10b man crazy)
 
     edge_t *e = myMalloc(n * sizeof(edge_t));
     memcpy(e, g->edges, g->num_edges * sizeof(edge_t));

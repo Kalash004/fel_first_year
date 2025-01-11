@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "*.ejs": "html",
+        "my_malloc.h": "c",
+        "graph.h": "c",
+        "dijkstra.h": "c",
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "pq_heap.h": "c",
+        "load_simple.h": "c"
+    }
+}

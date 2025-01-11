@@ -61,7 +61,7 @@ int main2(int argc, char *argv[])
    return ret;
 }
 
-int main1(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
    int ret = 0;
 
