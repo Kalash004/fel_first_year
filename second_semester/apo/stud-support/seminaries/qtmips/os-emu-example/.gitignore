@@ -1,0 +1,4 @@
+*.o
+*.srec
+depend
+malloc-test

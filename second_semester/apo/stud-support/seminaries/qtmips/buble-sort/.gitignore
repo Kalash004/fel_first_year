@@ -1,0 +1,8 @@
+*.o
+depend
+bubble-sort
+array_data.out
+array_size.in
+array_data.ref
+
+

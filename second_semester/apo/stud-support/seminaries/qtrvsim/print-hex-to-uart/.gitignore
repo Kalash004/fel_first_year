@@ -1,0 +1,6 @@
+*.o
+depend
+print-hex-to-uart
+input_val.in
+serial_port.ref
+serial_port.out

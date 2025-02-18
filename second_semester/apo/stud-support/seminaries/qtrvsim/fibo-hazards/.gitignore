@@ -1,0 +1,7 @@
+*.o
+depend
+fibo-hazards
+fibo_limit.in
+fibo_series.out
+
+
