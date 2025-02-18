@@ -9,8 +9,8 @@
 
 #include <stdio.h>
 
-//int var_a = 40;
-//int var_b =  2;
+int var_a = 40;
+int var_b =  2;
 
 int main(int argc, char *argv[])
 {
@@ -19,7 +19,8 @@ int main(int argc, char *argv[])
    * modify program to compute and print answer
    * of var_a + var_b
    */
-  printf("Hello APO\n");
+  int result = var_a + var_b;
+  printf("Hello APO %d\n", result);
 
   return 0;
 }
