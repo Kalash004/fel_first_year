@@ -1,11 +1,11 @@
 import java.util.function.Function;
 
 public class AdditionCommand implements ICommand{
-    private Function<Float, Void> callback;
+    private ICallback<Float, Void> callback;
     private float x;
     private float y;
 
-    public AdditionCommand(Function<Float, Void> callback, float x, float y) {
+    public AdditionCommand(ICallback<Float, Void> callback, float x, float y) {
         this.callback = callback;
         this.x = x;
         this.y = y;
@@ -15,6 +15,6 @@ public class AdditionCommand implements ICommand{
     public void execute() {
         Calculator calc = Calculator.getInstance();
         float res = calc.add(this.x, this.y);
-        this.callback.apply(res);
+        this.callback.call(res);
     }
 }
