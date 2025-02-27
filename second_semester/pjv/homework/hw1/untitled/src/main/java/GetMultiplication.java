@@ -1,6 +1,7 @@
-public class getAddition implements IFunc<Void, Void>{
+public class GetMultiplication implements IFunc<Void, Void> {
     private Controller controller;
-    public getAddition(Controller controller) {
+
+    public GetMultiplication(Controller controller) {
         this.controller = controller;
     }
 
@@ -11,7 +12,7 @@ public class getAddition implements IFunc<Void, Void>{
 
     @Override
     public Void call() {
-        controller.startAddition();
+        controller.startMultiplication();
         return null;
     }
 }
