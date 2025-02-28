@@ -7,7 +7,7 @@ public class GetMultiplication implements IFunc<Void, Void> {
 
     @Override
     public Void call(Void input) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override

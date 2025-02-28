@@ -18,7 +18,7 @@ public class Controller {
 
     public void loop() {
         int choice = 0;
-        while (choice != -1) {
+        while (true) {
             choice = getChoice();
             if (choice == -1) {
                 System.out.println("Bye. \n");
