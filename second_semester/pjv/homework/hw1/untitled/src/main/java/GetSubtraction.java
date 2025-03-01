@@ -12,7 +12,7 @@ public class GetSubtraction implements IFunc<Void, Void> {
 
     @Override
     public Void call() {
-        controller.startSubstraction();
+        controller.startSubtraction();
         return null;
     }
 }

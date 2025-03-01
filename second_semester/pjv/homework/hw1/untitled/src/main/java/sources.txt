@@ -1,0 +1,8 @@
+./GetSubtraction.java
+./GetAddition.java
+./GetDivision.java
+./Main.java
+./Calculator.java
+./GetMultiplication.java
+./IFunc.java
+./Controller.java
