@@ -1,3 +1,5 @@
+package cz.cvut.fel.pjv;
+
 public class GetMultiplication implements IFunc<Void, Void> {
     private Controller controller;
 

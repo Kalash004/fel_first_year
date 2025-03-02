@@ -1,7 +1,8 @@
-public class GetDivision implements IFunc<Void, Void> {
-    private Controller controller;
+package cz.cvut.fel.pjv;
 
-    public GetDivision(Controller controller) {
+public class GetAddition implements IFunc<Void, Void>{
+    private Controller controller;
+    public GetAddition(Controller controller) {
         this.controller = controller;
     }
 
@@ -12,8 +13,7 @@ public class GetDivision implements IFunc<Void, Void> {
 
     @Override
     public Void call() {
-        controller.startDivision();
+        controller.startAddition();
         return null;
     }
 }
-

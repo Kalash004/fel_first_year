@@ -1,3 +1,5 @@
+package cz.cvut.fel.pjv;
+
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -14,23 +16,22 @@ public class Controller {
         this.commands.put(1, new GetAddition(this));
         this.commands.put(2, new GetSubtraction(this));
         this.commands.put(3, new GetMultiplication(this));
+        this.commands.put(4, new GetDivision(this));
 
     }
 
     public void loop() {
         int choice;
-        while (true) {
-            choice = getChoice();
-            if (choice == -1) {
-                System.out.println("Bye. \n");
-                return;
-            }
-            if (!commands.containsKey(choice)) {
-                System.out.println("Chybna volba!\n");
-                return;
-            }
-            this.commands.get(choice).call();
+        choice = getChoice();
+        if (choice == -1) {
+            System.out.println("Bye. \n");
+            return;
         }
+        if (!commands.containsKey(choice)) {
+            System.out.println("Chybna volba!\n");
+            return;
+        }
+        this.commands.get(choice).call();
     }
 
     public void startAddition() {

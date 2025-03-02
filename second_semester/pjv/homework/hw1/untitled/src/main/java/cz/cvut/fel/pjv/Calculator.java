@@ -1,3 +1,5 @@
+package cz.cvut.fel.pjv;
+
 public class Calculator {
     public float sum(float a, float b) {
         return a+b;

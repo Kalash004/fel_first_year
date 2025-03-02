@@ -1,6 +1,9 @@
-public class GetAddition implements IFunc<Void, Void>{
+package cz.cvut.fel.pjv;
+
+public class GetSubtraction implements IFunc<Void, Void> {
     private Controller controller;
-    public GetAddition(Controller controller) {
+
+    public GetSubtraction(Controller controller) {
         this.controller = controller;
     }
 
@@ -11,7 +14,8 @@ public class GetAddition implements IFunc<Void, Void>{
 
     @Override
     public Void call() {
-        controller.startAddition();
+        controller.startSubtraction();
         return null;
     }
 }
+
