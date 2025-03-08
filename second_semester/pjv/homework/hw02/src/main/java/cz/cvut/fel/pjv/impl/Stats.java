@@ -19,6 +19,11 @@ public class Stats implements StatsInterface {
 
     @Override
     public void addNumber(double number) {
+        if (array_size == 10) {
+            array_size = 0;
+            sum = 0;
+            list.clear();
+        }
         list.add(number);
         sum += number;
         array_size += 1;
@@ -50,10 +55,7 @@ public class Stats implements StatsInterface {
 
     @Override
     public String getFormattedStatistics() {
-        return String.format("%.3f %.3f", getAverage(), getStandardDeviation());
+        return String.format("%2d %.3f %.3f", getCount(),getAverage(), getStandardDeviation());
     }
 
-    public String getList() {
-        return list.toString() + " " + array_size;
-    }
 }

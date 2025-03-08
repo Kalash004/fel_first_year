@@ -7,29 +7,28 @@ public class Lab02 {
     private Stats stats = new Stats();
 
     public void main(String[] args) {
-        int loop_count = 0;
+        int input_count = 0;
+        int line_count = 0;
         while (scanner.hasNext()) {
-            loop_count++;
+            input_count++;
+            line_count++;
             double number;
 
             try {
                 number = Double.parseDouble(scanner.nextLine());
             } catch (NumberFormatException e) {
-                System.err.printf("A number has not been parsed from line %d\n", loop_count);
-                --loop_count;
+                System.err.printf("A number has not been parsed from line %d\n", line_count);
+                input_count--;
                 continue;
             }
 
             stats.addNumber(number);
-            if (loop_count % 10 == 0) {
-                System.out.printf("%2d %s\n", loop_count, stats.getFormattedStatistics());
-                loop_count = 0;
-                stats = new Stats();
+            if (input_count % 10 == 0) {
+                System.out.printf("%s\n", stats.getFormattedStatistics());
             }
         }
-        System.err.printf("End of input detected!\n", loop_count);
-        System.out.printf("%2d %s\n", loop_count, stats.getFormattedStatistics());
-        System.out.println(stats.getList());
+        System.err.printf("End of input detected!\n");
+        System.out.printf("%s\n", stats.getFormattedStatistics());
         scanner.close();
     }
 }
