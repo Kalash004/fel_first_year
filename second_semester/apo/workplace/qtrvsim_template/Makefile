@@ -1,7 +1,7 @@
 ARCH=riscv64-unknown-elf
 
-SOURCES = change_me.S
-TARGET_EXE = change_me
+SOURCES = bubble.S
+TARGET_EXE = bubble
 
 CC=$(ARCH)-gcc
 CXX=$(ARCH)-g++
