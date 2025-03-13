@@ -5,23 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a2a4b7f3-b5f7-4f62-b71a-cc45280a0744" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/avarage/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/avarage/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/avarage/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/avarage/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/avarage/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/avarage/pom.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/avarage/src/main/java/pjv/Main.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/pom.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/src/main/java/pjv/GameDice.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/src/main/java/pjv/Main.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../../lab/lab1/game/src/main/java/pjv/Player.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,6 +71,8 @@
       <workItem from="1740648681380" duration="5185000" />
       <workItem from="1741254414956" duration="2000" />
       <workItem from="1741254496813" duration="83000" />
+      <workItem from="1741857130727" duration="3000" />
+      <workItem from="1741857153545" duration="170000" />
     </task>
     <servers />
   </component>
