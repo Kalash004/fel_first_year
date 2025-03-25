@@ -1,0 +1,3 @@
+Datove Hazardy - zameskani nejakych dat pri pipeline vede k datovym hazardum. 
+Forwarding - zastavujeme jednu instrukci a cekama na preposlani potrebnych dat z jine instrukci (stall)
+Spekulace pri skoku - prediktory (1bit / 2bit - schmidt prediktor [ {>(Strongly not taken) <=> (Weakly not taken) <=> (Weakly taken) <=> (Strongly taken)<}])
