@@ -70,7 +70,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat/pjv.semestral_work.kalasnikov_kolomiiets.view.HelloApplication
+                                pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat/view.Ui
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>

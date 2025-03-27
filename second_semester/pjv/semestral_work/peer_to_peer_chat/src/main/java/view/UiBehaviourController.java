@@ -1,9 +1,9 @@
-package pjv.semestral_work.kalasnikov_kolomiiets.view;
+package view;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 
-public class HelloController {
+public class UiBehaviourController {
     @FXML
     private Label welcomeText;
 
