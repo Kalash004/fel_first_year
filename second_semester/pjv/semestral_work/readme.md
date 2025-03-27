@@ -42,7 +42,7 @@ This document describes the communication process between two clients in a peer-
 
 ## Communication Steps (protocol)
 
-![Client communication steps](./protocol.png)
+![Client communication steps](./docs/protocol.png)
 
 1. **Discovery Phase (UDP)**
    - Client A sends a **Hello** message using UDP.
@@ -101,6 +101,6 @@ This document describes the communication process between two clients in a peer-
 
 - The basic elements of our interface will be similar to the Chat interface in Microsoft Teams or Discord.
 
-![starting page demo image](./welcome.png)
+![starting page demo image](./docs/welcome.png)
 
-![main interface demo image](./chat.png)
+![main interface demo image](./docs/chat.png)
