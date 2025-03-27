@@ -5,6 +5,6 @@ module pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat {
     requires org.controlsfx.controls;
     requires org.kordamp.bootstrapfx.core;
 
-    opens pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat to javafx.fxml;
-    exports pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat;
+    opens pjv.semestral_work.kalasnikov_kolomiiets.view to javafx.fxml;
+    exports pjv.semestral_work.kalasnikov_kolomiiets.view;
 }

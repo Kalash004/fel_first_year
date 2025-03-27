@@ -3,8 +3,8 @@ package cz.cvut.fel.pjv.semestral.demo.model;
 public enum ImageId {
     BACKGROUND("background.png"),
     BIRD("bird1.png"),
-    TOP_PIPE("bottom.png"),
-    BOTTOM_PIPE("top.png");
+    TOP_PIPE("top.png"),
+    BOTTOM_PIPE("bottom.png");
 
     private final String fileName;
     private double width;

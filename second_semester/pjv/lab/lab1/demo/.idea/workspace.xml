@@ -5,25 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="674de36d-7288-4ed1-809d-5085de2a7279" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mvnw" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/fel/pjv/semestral/demo/HelloApplication.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/background.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/bird0.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/bird1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/bird2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/birddead.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/bottom.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/top.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/src/main/java/connection_api/discovery/DiscoveryClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/src/main/java/connection_api/discovery/DiscoveryClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/src/main/java/module-info.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/src/main/java/pjv/semestral_work/kalasnikov_kolomiiets/peer_to_peer_chat/HelloApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/src/main/java/pjv/semestral_work/kalasnikov_kolomiiets/peer_to_peer_chat/HelloController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/src/main/resources/pjv/semestral_work/kalasnikov_kolomiiets/peer_to_peer_chat/hello-view.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/../../../semestral_work/peer_to_peer_chat/src/main/resources/pjv/semestral_work/kalasnikov_kolomiiets/peer_to_peer_chat/hello-view.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,25 +35,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.HelloApplication.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/import/users/kalasan1/projects/second_semester/pjv/lab/semestral_demo/demo",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.2",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.HelloApplication.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/import/users/kalasan1/projects/second_semester/pjv/lab/semestral_demo/demo&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/main/resources/cz/cvut/fel/pjv/semestral/demo" />
@@ -115,6 +102,7 @@
       <workItem from="1742461716924" duration="400000" />
       <workItem from="1742464592900" duration="73000" />
       <workItem from="1742464680815" duration="37000" />
+      <workItem from="1743068308838" duration="4000" />
     </task>
     <servers />
   </component>

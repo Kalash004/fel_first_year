@@ -30,7 +30,7 @@ public class DiscoveryClient implements IRunnable {
     @Override
     public void run() {
         try {
-            discoverySocket = new Socket(this.ip, this.port);
+            discoverySocket = new Socket();
         } catch (IOException e) {
             // TODO: Logger
             throw new RuntimeException(e);
@@ -42,56 +42,56 @@ public class DiscoveryClient implements IRunnable {
 // EXAMPLE CLIENT STRUCTURE (source: https://cw.fel.cvut.cz/wiki/courses/b0b36pjv/tutorials/10/site)
 
 
-public class EchoClient {
-    // cely klient je tak jednoduchy, ze je v metode main
-    public static void main(String[] args) {
-        // otevirani socketu
-
-        try {
-            clientSocket = new Socket("localhost", 9903);
-        }
-        catch (UnknownHostException ex) {
-            // Nepodarilo se najit (DNS, NIS atp.) hostitele
-            System.exit(-1);
-        }
-        catch (IOException ex) {
-            // Nepodarilo se spojit s hostitelem
-            System.exit(-1);
-        }
-        // parametry spojeni - vyprseni (pri cteni ze socketu)
-        try {
-            clientSocket.setSoTimeout(TIMEOUT_1M);
-        } catch (SocketException ex) {
-            // Nepodarilo se nastavit timeout
-        }
-        // otevreni proudu, spojeni
-        try {
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            BufferedReader systemIn = new BufferedReader(new InputStreamReader(System.in));
-
-            String input;
-            while ((input = systemIn.readLine()) != null) {
-                // takhle se posilaji data serveru
-                out.println(input);
-                // pokud mame skoncit, tak uzavreme otevrene proudy a socket
-                if (input.trim().equals("CLOSE")) {
-                    in.close();
-                    out.close();
-                    systemIn.close();
-                    clientSocket.close();
-                    break;
-                }
-                // jinak precteme, co server odpovedel a vypiseme
-                else {
-                    String response = in.readLine();
-                    System.out.println("RESPONSE: " + response);
-                }
-            }
-        }
-        catch (IOException ex) {
-            EchoLogger.log(ERROR,"Doslo k chybe I/O.");
-            System.exit(-1);
-        }
-    }
-}
+//public class EchoClient {
+//    // cely klient je tak jednoduchy, ze je v metode main
+//    public static void main(String[] args) {
+//        // otevirani socketu
+//
+//        try {
+//            clientSocket = new Socket("localhost", 9903);
+//        }
+//        catch (UnknownHostException ex) {
+//            // Nepodarilo se najit (DNS, NIS atp.) hostitele
+//            System.exit(-1);
+//        }
+//        catch (IOException ex) {
+//            // Nepodarilo se spojit s hostitelem
+//            System.exit(-1);
+//        }
+//        // parametry spojeni - vyprseni (pri cteni ze socketu)
+//        try {
+//            clientSocket.setSoTimeout(TIMEOUT_1M);
+//        } catch (SocketException ex) {
+//            // Nepodarilo se nastavit timeout
+//        }
+//        // otevreni proudu, spojeni
+//        try {
+//            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+//            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+//            BufferedReader systemIn = new BufferedReader(new InputStreamReader(System.in));
+//
+//            String input;
+//            while ((input = systemIn.readLine()) != null) {
+//                // takhle se posilaji data serveru
+//                out.println(input);
+//                // pokud mame skoncit, tak uzavreme otevrene proudy a socket
+//                if (input.trim().equals("CLOSE")) {
+//                    in.close();
+//                    out.close();
+//                    systemIn.close();
+//                    clientSocket.close();
+//                    break;
+//                }
+//                // jinak precteme, co server odpovedel a vypiseme
+//                else {
+//                    String response = in.readLine();
+//                    System.out.println("RESPONSE: " + response);
+//                }
+//            }
+//        }
+//        catch (IOException ex) {
+//            EchoLogger.log(ERROR,"Doslo k chybe I/O.");
+//            System.exit(-1);
+//        }
+//    }
+//}

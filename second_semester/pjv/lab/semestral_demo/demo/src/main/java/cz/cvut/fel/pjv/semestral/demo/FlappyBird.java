@@ -1,5 +1,7 @@
 package cz.cvut.fel.pjv.semestral.demo;
 
+import cz.cvut.fel.pjv.semestral.demo.model.Drawable;
+import cz.cvut.fel.pjv.semestral.demo.model.Game;
 import cz.cvut.fel.pjv.semestral.demo.model.ImageId;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -14,12 +16,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FlappyBird extends Application {
-    Map<ImageId, Image> images = new HashMap<ImageId, Image>();
+    private final Map<ImageId, Image> images = new HashMap<ImageId, Image>();
+    private Game game;
     private final Canvas canvas = new Canvas();
 
     @Override
     public void start(Stage stage) {
         loadImages();
+        game = new Game();
 
         double width = images.get(ImageId.BACKGROUND).getWidth();
         double height = images.get(ImageId.BACKGROUND).getHeight();
@@ -31,8 +35,8 @@ public class FlappyBird extends Application {
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long time) {
-                drawBackground(gc);
-                drawObject(gc);
+                drawObject(canvas);
+                game.update();
             }
         };
 
@@ -60,12 +64,14 @@ public class FlappyBird extends Application {
         }
     }
 
-    private void drawBackground(GraphicsContext gc) {
-        gc.drawImage(images.get(ImageId.BACKGROUND), 0, 0);
-    }
+//    private void drawBackground(GraphicsContext gc) {
+//    }
 
-    private void drawObject(GraphicsContext gc) {
-        gc.drawImage(images.get(ImageId.BIRD), 100, 500);
+    private void drawObject(Canvas canvas) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        for (Drawable draw_me : game.getDrawableObjects()) {
+            gc.drawImage(images.get(draw_me.imageId()), draw_me.x(), draw_me.y());
+        }
     }
 
     public static void main(String[] args) {

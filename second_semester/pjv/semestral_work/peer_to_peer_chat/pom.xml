@@ -18,12 +18,12 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>24-ea+19</version>
+            <version>21</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>24-ea+19</version>
+            <version>21</version>
         </dependency>
         <dependency>
             <groupId>org.controlsfx</groupId>
@@ -70,7 +70,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat/pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat.HelloApplication
+                                pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat/pjv.semestral_work.kalasnikov_kolomiiets.view.HelloApplication
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>

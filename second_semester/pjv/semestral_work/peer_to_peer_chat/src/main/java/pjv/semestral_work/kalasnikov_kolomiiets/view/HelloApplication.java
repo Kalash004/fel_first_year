@@ -1,4 +1,4 @@
-package pjv.semestral_work.kalasnikov_kolomiiets.peer_to_peer_chat;
+package pjv.semestral_work.kalasnikov_kolomiiets.view;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
