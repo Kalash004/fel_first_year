@@ -1,6 +1,3 @@
-[submodule "second_semester/pjv/semestral_work"]
-	path = second_semester/pjv/semestral_work	
-	url = git@gitlab.fel.cvut.cz:B242_B0B36PJV/semestral_work.git
 [submodule "semestral_work"]
 	path = second_semester/pjv/kolomcon
 	url = git@gitlab.fel.cvut.cz:B242_B0B36PJV/kolomcon.git
