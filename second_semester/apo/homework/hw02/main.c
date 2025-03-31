@@ -8,13 +8,14 @@
 #include <sys/stat.h> // fstat()
 #include <unistd.h>   // close()
 
-#define OUTPUT_IMAGE_NAME "./output.ppm" 
+#define OUTPUT_IMAGE_NAME "./testoutput.ppm" 
 #define P6_OFFSET 3
+#define MAX_COLOR_OFFSET 4
 
 char *parse_args_get_file_name(int argc, char *argv[]);
 int get_width(void *mapped, int *next_offset);
 int get_height(void *mapped, int offset, int *next_offset);
-int get_line(void *source, char *target, int size, int start);
+int get_line(void *source, char *target, int size);
 
 
 int main(int argc, char *argv[])
@@ -58,13 +59,23 @@ int main(int argc, char *argv[])
     }
 
 
-    int next_skip = 0;
-    int width = get_width(mapped_mem, &next_skip);
-    int height = get_height(mapped_mem, P6_OFFSET + next_skip, &next_skip);
+    int next_skip1 = 0;
+    int next_skip2 = 0;
+    int width = get_width(mapped_mem, &next_skip1);
+    int height = get_height(mapped_mem, P6_OFFSET + next_skip1, &next_skip2);
 
-    char *image = mapped_mem
+    char *image = (char *)(mapped_mem + (P6_OFFSET + next_skip1 + next_skip2 + MAX_COLOR_OFFSET + 1));
+
+    FILE *save_to = fopen(OUTPUT_IMAGE_NAME, "w");
+    fprintf(save_to,"P6\n");
+    fprintf(save_to,"%i\n",width);
+    fprintf(save_to,"%i\n",height);
+    fprintf(save_to,"255");
+    fwrite(image, sizeof(char), (width * height * 3) * 8, save_to);
 
 }
+
+
 
 int get_width(void *mapped, int *next_offset) {
     char buffer[1024] = {};
@@ -78,12 +89,8 @@ int get_height(void *mapped, int offset, int *next_offset) {
     return atoi(buffer);
 }
 
-int get_line(void *source, char *target, int size, int start) {
-    static int _start = 0;
-    if (start != 0 ){
-        _start = start;
-    }
-    for (int i = start; i < size; ++i) {
+int get_line(void *source, char *target, int size) {
+    for (int i = 0; i < size; ++i) {
         target[i] = ((char *)source)[i];
         if (target[i] == '\n') {
             target[i] = '\0';
