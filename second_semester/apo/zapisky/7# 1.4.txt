@@ -1,2 +1,18 @@
+
+=== hazardy ===
 - hazardy nastavaji kdyz po savovani do pameti a hned za ni nastane cteni pameti 
 - jak fixnout ? - stall / forwarding
+- optimalizace - cetni pameti odsunout od nacitani do pameti
+
+
+=== predikce skoku ===
+- pochopime ze skaceme v Instruction decode anebo Instruction fetch (pred dekodovana instrukce)
+- delay slot je misto pro instrukci, ktere se vzdycky vykona po skoku
+Spekulace pri skoku (bne):
+ * prediktory:
+    - bez pameti:
+        - taken (porad ano) : dobry pro for loop (varianta label: ..... bne label)
+        - not taken (porad ne) : dobry pro error handling
+    - s pameti (history table):
+        - (1bit / 2bit - schmidt prediktor [ {>(Strongly not taken) <=> (Weakly not taken) <=> (Weakly taken) <=> (Strongly taken)<}])
+
