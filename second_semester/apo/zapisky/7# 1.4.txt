@@ -1,0 +1,2 @@
+- hazardy nastavaji kdyz po savovani do pameti a hned za ni nastane cteni pameti 
+- jak fixnout ? - stall / forwarding
