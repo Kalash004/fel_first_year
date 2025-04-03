@@ -9,6 +9,9 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -50,6 +53,14 @@ public class FlappyBird extends Application {
 
         StackPane root = new StackPane(canvas);
         Scene scene = new Scene(root,width,height);
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.getKeyCode("SPACE")) {
+                game.birdJump();
+            }
+        });
+        scene.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            game.birdJump();
+        });
         stage.setScene(scene);
         stage.setTitle("Skibidi sigma michal");
         stage.show();
