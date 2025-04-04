@@ -9,7 +9,7 @@
 #include <unistd.h>   // close()
 #include <string.h>   // For memcpy()
 #include <math.h>
-#include <immintrin.h>  // AVX2 Intrinsics
+#include <immintrin.h> // AVX2 Intrinsics
 
 #define OUTPUT_IMAGE_NAME "./testoutput.ppm"
 #define P6_OFFSET 3
@@ -18,7 +18,7 @@
 char *parse_args_get_file_name(int argc, char *argv[]);
 static inline void setPixel(unsigned char *image, int image_width, int x, int y, unsigned char red, unsigned char green, unsigned char blue);
 static inline void getPixel(unsigned char *image, int image_width, int x, int y, unsigned char *red, unsigned char *green, unsigned char *blue);
-void convolute(unsigned char *image, int *mask, int width, int height, unsigned int *histogram);
+void convolute(unsigned char *image, int width, int height, unsigned int *histogram);
 
 int main(int argc, char *argv[])
 {
@@ -51,7 +51,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-
     int file_descriptor = open(file_name, O_RDONLY);
     if (file_descriptor == -1)
     {
@@ -59,14 +58,12 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-
     struct stat sb;
     if (fstat(file_descriptor, &sb) == -1)
     { // Get file size
         printf("\nException during fstat\n");
         return EXIT_FAILURE;
     }
-
 
     size_t filesize = sb.st_size;
     void *mapped_mem = mmap(NULL, filesize, PROT_READ, MAP_PRIVATE, file_descriptor, 0);
@@ -76,15 +73,17 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-
-    
-    close(file_descriptor);
-    
+    // FILE *img = fopen(file_name, "rb");
     int width = 0;
     int height = 0;
-    
-    int i = 3; 
-    
+    // fseek(img, 3, SEEK_SET);
+    // fscanf(img, "%i\n%i", &width, &height);
+    // fseek(img, 5, SEEK_CUR);
+
+    // unsigned char *read_img = malloc(width * height * 3 * sizeof(unsigned int));
+    // fread(read_img, sizeof(unsigned char), width * height * 3 * sizeof(unsigned int), img);
+    int i = 3;
+
     char temp[100000];
     int inx = 0;
     for (i; ((char *)mapped_mem)[i] != '\n'; ++i) {
@@ -94,8 +93,7 @@ int main(int argc, char *argv[])
     ++i;
     temp[++inx] = '\0';
     width = atoi(temp);
-    
-    
+
     char temp2[100000];
     inx = 0;
     for (i; ((char *)mapped_mem)[i] != '\n'; ++i) {
@@ -107,92 +105,125 @@ int main(int argc, char *argv[])
     height = atoi(temp2);
     i+=4;
     size_t n = width * height * 3 * sizeof(unsigned char);
-    unsigned char *image = malloc(n);
-    memcpy(image, (unsigned char *)(mapped_mem + i), n);
-    
-    
-    unsigned int histogram[5];
-    int mask[9] = {0, -1, 0, -1, 5, -1, 0, -1, 0};
-    convolute(image, mask, width, height, histogram);
-    
-    for (int x = 0; x < width; ++x) {
+    unsigned char *read_img = malloc(n);
+    memcpy(read_img, (unsigned char *)(mapped_mem + i), n);
+
+    printf("%ix%i\n", width, height);
+    unsigned int histogram[5] = {0};
+    convolute(read_img, width, height, histogram);
+
+    for (int x = 0; x < width; ++x)
+    {
         unsigned char r, g, b;
-        getPixel(image, width, x, 0, &r, &g, &b);
-        int grey = round(0.2126 * r +  0.7152 * g + 0.0722 * b);
-   
-        if (grey <= 50) {
+        getPixel(read_img, width, x, 0, &r, &g, &b);
+        int grey = round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+
+        if (grey <= 50)
+        {
             histogram[0] += 1;
-        } else if (grey <= 101) {
+        }
+        else if (grey <= 101)
+        {
             histogram[1] += 1;
-        } else if (grey <= 152) {
+        }
+        else if (grey <= 152)
+        {
             histogram[2] += 1;
-        } else if (grey <= 203) {
+        }
+        else if (grey <= 203)
+        {
             histogram[3] += 1;
-        } else if (grey <= 255) { 
+        }
+        else if (grey <= 255)
+        {
             histogram[4] += 1;
         }
 
-        getPixel(image, width, x, height, &r, &g, &b);
-        grey = round(0.2126 * r +  0.7152 * g + 0.0722 * b);
+        getPixel(read_img, width, x, height - 1, &r, &g, &b);
+        grey = round(0.2126 * r + 0.7152 * g + 0.0722 * b);
 
-        if (grey <= 50) {
+        if (grey <= 50)
+        {
             histogram[0] += 1;
-        } else if (grey <= 101) {
+        }
+        else if (grey <= 101)
+        {
             histogram[1] += 1;
-        } else if (grey <= 152) {
+        }
+        else if (grey <= 152)
+        {
             histogram[2] += 1;
-        } else if (grey <= 203) {
+        }
+        else if (grey <= 203)
+        {
             histogram[3] += 1;
-        } else if (grey <= 255) { 
+        }
+        else if (grey <= 255)
+        {
             histogram[4] += 1;
-        }     
-        
+        }
     }
 
-    for (int y = 1; y < height - 1; ++y ) {
+    for (int y = 1; y < height - 1; ++y)
+    {
         unsigned char r, g, b;
 
-        getPixel(image, width, 0, y, &r, &g, &b);
-        int grey = round(0.2126 * r +  0.7152 * g + 0.0722 * b);
+        getPixel(read_img, width, 0, y, &r, &g, &b);
+        int grey = round(0.2126 * r + 0.7152 * g + 0.0722 * b);
 
-        if (grey <= 50) {
+        if (grey <= 50)
+        {
             histogram[0] += 1;
-        } else if (grey <= 101) {
+        }
+        else if (grey <= 101)
+        {
             histogram[1] += 1;
-        } else if (grey <= 152) {
+        }
+        else if (grey <= 152)
+        {
             histogram[2] += 1;
-        } else if (grey <= 203) {
+        }
+        else if (grey <= 203)
+        {
             histogram[3] += 1;
-        } else if (grey <= 255) { 
+        }
+        else if (grey <= 255)
+        {
             histogram[4] += 1;
         }
-    
-        getPixel(image, width, width, y, &r, &g, &b);
-        grey = round(0.2126 * r +  0.7152 * g + 0.0722 * b);
 
-        if (grey <= 50) {
+        getPixel(read_img, width, width - 1, y, &r, &g, &b);
+        grey = round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+
+        if (grey <= 50)
+        {
             histogram[0] += 1;
-        } else if (grey <= 101) {
+        }
+        else if (grey <= 101)
+        {
             histogram[1] += 1;
-        } else if (grey <= 152) {
+        }
+        else if (grey <= 152)
+        {
             histogram[2] += 1;
-        } else if (grey <= 203) {
+        }
+        else if (grey <= 203)
+        {
             histogram[3] += 1;
-        } else if (grey <= 255) { 
+        }
+        else if (grey <= 255)
+        {
             histogram[4] += 1;
         }
-    
     }
-
 
     printf("histogram : %u %u %u %u %u\n", histogram[0], histogram[1], histogram[2], histogram[3], histogram[4]);
 
-
     FILE *save_to = fopen(OUTPUT_IMAGE_NAME, "wb");
-    fprintf(save_to, "P6\n%d %d\n255\n", width, height);
-    fwrite(image, sizeof(unsigned char), (width * height * 3), save_to);    
-    free(image);
-
+    fprintf(save_to, "P6\n%d\n%d\n255\n", width, height);
+    fwrite(read_img, sizeof(unsigned char), (width * height * 3 * sizeof(unsigned char)), save_to);
+    // free(read_img);
+    close(file_descriptor);
 }
 
 /*
@@ -203,12 +234,12 @@ int main(int argc, char *argv[])
 
 /*
 // void convolve_SIMD(unsigned char *image, int *mask, int width, int height, unsigned int *histogram) {
-    //     unsigned char *copy = (unsigned char*)malloc(width * height * 3);  
+    //     unsigned char *copy = (unsigned char*)malloc(width * height * 3);
     //     memcpy(copy, image, width * height * 3);
-    
+
     //     for (int y = 1; y < height - 1; y++) {
         //         for (int x = 1; x < width - 1; x += 8) {  // Process 8 pixels at a time
-        
+
         //             // Load 9 neighboring pixels into SIMD registers
         //             __m256i a = _mm256_loadu_si256((__m256i*)&copy[((y - 1) * width + (x - 1)) * 3]);
         //             __m256i b = _mm256_loadu_si256((__m256i*)&copy[((y - 1) * width + (x)) * 3]);
@@ -219,7 +250,7 @@ int main(int argc, char *argv[])
         //             __m256i g = _mm256_loadu_si256((__m256i*)&copy[((y + 1) * width + (x - 1)) * 3]);
         //             __m256i h = _mm256_loadu_si256((__m256i*)&copy[((y + 1) * width + (x)) * 3]);
         //             __m256i i = _mm256_loadu_si256((__m256i*)&copy[((y + 1) * width + (x + 1)) * 3]);
-        
+
         //             // Convert to 16-bit integers (avoids overflow)
         //             __m256i a16 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(a));
         //             __m256i b16 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(b));
@@ -230,7 +261,7 @@ int main(int argc, char *argv[])
         //             __m256i g16 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(g));
         //             __m256i h16 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(h));
         //             __m256i i16 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(i));
-        
+
         //             // Multiply with mask
         //             __m256i result = _mm256_add_epi16(
             //                 _mm256_mullo_epi16(a16, _mm256_set1_epi16(mask[0])),
@@ -243,10 +274,10 @@ int main(int argc, char *argv[])
             //             result = _mm256_add_epi16(result, _mm256_mullo_epi16(g16, _mm256_set1_epi16(mask[6])));
             //             result = _mm256_add_epi16(result, _mm256_mullo_epi16(h16, _mm256_set1_epi16(mask[7])));
             //             result = _mm256_add_epi16(result, _mm256_mullo_epi16(i16, _mm256_set1_epi16(mask[8])));
-            
+
             //             // Normalize & Clamp (0-255)
             //             result = _mm256_max_epi16(_mm256_min_epi16(result, _mm256_set1_epi16(255)), _mm256_setzero_si256());
-            
+
             //             // Store result
             //             _mm256_storeu_si256((__m256i*)&image[(y * width + x) * 3], result);
             //         }
@@ -255,73 +286,94 @@ int main(int argc, char *argv[])
             // }
             */
 
-
-void convolute(unsigned char *image, int *mask, int width, int height, unsigned int *histogram)
+void convolute(unsigned char *image, int width, int height, unsigned int *histogram)
 {
     unsigned char *copy = malloc(width * height * 3 * sizeof(unsigned char));
-    memcpy(copy, image, width * height * 3);
+    memcpy(copy, image, width * height * 3 * sizeof(unsigned char));
     int i = 0;
     for (int x_axis = 1; x_axis < width - 1; ++x_axis)
     {
         for (int y_axis = 1; y_axis < height - 1; ++y_axis)
         {
-            unsigned char b_red, d_red, e_red, f_red, h_red;
-            unsigned char b_green, d_green, e_green, f_green, h_green;
-            unsigned char b_blue, d_blue, e_blue, f_blue, h_blue;
+            unsigned char b_red = 0, d_red = 0, e_red = 0, f_red = 0, h_red = 0;
+            unsigned char b_green = 0, d_green = 0, e_green = 0, f_green = 0, h_green = 0;
+            unsigned char b_blue = 0, d_blue = 0, e_blue = 0, f_blue = 0, h_blue = 0;
 
-            getPixel(image, width, x_axis,   y_axis-1, &b_red, &b_green, &b_blue);  
-            
-            getPixel(image, width, x_axis-1, y_axis,   &d_red, &d_green, &d_blue);  
-            getPixel(image, width, x_axis,   y_axis,   &e_red, &e_green, &e_blue);  
-            getPixel(image, width, x_axis+1, y_axis,   &f_red, &f_green, &f_blue);  
-            
-            getPixel(image, width, x_axis,   y_axis+1, &h_red, &h_green, &h_blue);  
+            getPixel(copy, width, x_axis, y_axis - 1, &b_red, &b_green, &b_blue);
 
-            int new_value_red = b_red * mask[1] + d_red * mask[3] + e_red * mask[4] + f_red * mask[5] + h_red * mask[7];
-            int new_value_blue = b_blue * mask[1] + d_blue * mask[3] + e_blue * mask[4] + f_blue * mask[5] + h_blue * mask[7];
-            int new_value_green = b_green * mask[1] + d_green * mask[3] + e_green * mask[4] + f_green * mask[5] + h_green * mask[7];
-        
-            if (new_value_red > 255) new_value_red= 255;
-            if (new_value_red < 0) new_value_red= 0;
+            getPixel(copy, width, x_axis - 1, y_axis, &d_red, &d_green, &d_blue);
+            getPixel(copy, width, x_axis, y_axis, &e_red, &e_green, &e_blue);
+            getPixel(copy, width, x_axis + 1, y_axis, &f_red, &f_green, &f_blue);
 
-            if (new_value_green > 255) new_value_green = 255;
-            if (new_value_green < 0) new_value_green = 0;
+            getPixel(copy, width, x_axis, y_axis + 1, &h_red, &h_green, &h_blue);
 
-            if (new_value_blue > 255) new_value_blue = 255;
-            if (new_value_blue < 0) new_value_blue = 0;
+            int new_value_red = 0, new_value_blue = 0, new_value_green = 0;
 
-            unsigned char new_value_red_c = (unsigned char) new_value_red;
-            unsigned char new_value_green_c = (unsigned char) new_value_green;
-            unsigned char new_value_blue_c = (unsigned char) new_value_blue;
-            
-            int y = round(0.2126 * new_value_red_c +  0.7152 * new_value_green_c + 0.0722 * new_value_blue_c);
+            new_value_red = 0 - b_red - d_red + (e_red * 5) - f_red - h_red;
+            new_value_blue = 0 - b_blue - d_blue + (e_blue * 5) - f_blue - h_blue;
+            new_value_green = 0 - b_green - d_green + (e_green * 5) - f_green - h_green;
 
-            if (y <= 50) {
+            // printf("r:%i,g:%i,b:%i\n", new_value_red, new_value_green, new_value_red);
+            // getchar();
+            if (new_value_red >= 255)
+                new_value_red = 255;
+            if (new_value_red <= 0)
+                new_value_red = 0;
+
+            if (new_value_green >= 255)
+                new_value_green = 255;
+            if (new_value_green <= 0)
+                new_value_green = 0;
+
+            if (new_value_blue >= 255)
+                new_value_blue = 255;
+            if (new_value_blue <= 0)
+                new_value_blue = 0;
+
+            unsigned char new_value_red_c = (unsigned char)new_value_red;
+            unsigned char new_value_green_c = (unsigned char)new_value_green;
+            unsigned char new_value_blue_c = (unsigned char)new_value_blue;
+
+            int grey = round(0.2126 * new_value_red_c + 0.7152 * new_value_green_c + 0.0722 * new_value_blue_c);
+            printf("grey:%i", grey);
+
+            if (grey <= 50)
+            {
                 histogram[0] += 1;
-            } else if (y <= 101) {
+            }
+            else if (grey <= 101)
+            {
                 histogram[1] += 1;
-            } else if (y <= 152) {
+            }
+            else if (grey <= 152)
+            {
                 histogram[2] += 1;
-            } else if (y <= 203) {
+            }
+            else if (grey <= 203)
+            {
                 histogram[3] += 1;
-            } else if (y <= 255) { 
+            }
+            else if (grey <= 255)
+            {
                 histogram[4] += 1;
             }
 
-            setPixel(copy, width, x_axis, y_axis, new_value_red_c, new_value_green_c, new_value_blue_c);
+            setPixel(image, width, x_axis, y_axis, new_value_red_c, new_value_green_c, new_value_blue_c);
         }
     }
     free(copy);
 }
 
-static inline void setPixel(unsigned char *image, int width, int x, int y, unsigned char r, unsigned char g, unsigned char b) {
+static inline void setPixel(unsigned char *image, int width, int x, int y, unsigned char r, unsigned char g, unsigned char b)
+{
     unsigned char *ptr = image + ((y * width + x) * 3);
     ptr[0] = r;
     ptr[1] = g;
     ptr[2] = b;
 }
 
-static inline void getPixel(unsigned char *image, int width, int x, int y, unsigned char *r, unsigned char *g, unsigned char *b) {
+static inline void getPixel(unsigned char *image, int width, int x, int y, unsigned char *r, unsigned char *g, unsigned char *b)
+{
     unsigned char *ptr = image + ((y * width + x) * 3);
     *r = ptr[0];
     *g = ptr[1];
