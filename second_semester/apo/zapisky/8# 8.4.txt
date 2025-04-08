@@ -1,0 +1,4 @@
+Cpu posle Pereferii (pamet | I/O) 
+- adressu (adressu take posle krabicce ktera zapina/vypina pereferii (memory | i/o))
+- data
+- instrukci
