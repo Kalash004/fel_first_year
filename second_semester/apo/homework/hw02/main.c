@@ -156,6 +156,54 @@ int main(int argc, char *argv[])
         new_img[idx_center/3].g = read_img[idx_center + 1];
         new_img[idx_center/3].b = read_img[idx_center + 2];
     }
+    pixel_t *new_img = calloc(n, sizeof(pixel_t));
+
+    for (int x = 0; x < width; ++x)
+    {
+        int idx_center = x * 3;
+        int grey = round(0.2126 * read_img[idx_center] + 0.7152 * read_img[idx_center + 1] + 0.0722 * read_img[idx_center + 2]);
+        int bin = grey / 51;
+        if (bin > 4)
+            bin = 4;
+        histogram[bin]++;
+        new_img[idx_center/3].r = read_img[idx_center];
+        new_img[idx_center/3].g = read_img[idx_center + 1];
+        new_img[idx_center/3].b = read_img[idx_center + 2];
+
+
+        idx_center = ((height - 1) * width + x) * 3;
+        grey = round(0.2126 * read_img[idx_center] + 0.7152 * read_img[idx_center + 1] + 0.0722 * read_img[idx_center + 2]);
+        bin = grey / 51;
+        if (bin > 4)
+            bin = 4;
+        histogram[bin]++;
+        new_img[idx_center/3].r = read_img[idx_center];
+        new_img[idx_center/3].g = read_img[idx_center + 1];
+        new_img[idx_center/3].b = read_img[idx_center + 2];
+    }
+
+    for (int y = 1; y < height - 1; ++y)
+    {
+        int idx_center = (y * width) * 3;
+        int grey = round(0.2126 * read_img[idx_center] + 0.7152 * read_img[idx_center + 1] + 0.0722 * read_img[idx_center + 2]);
+        int bin = grey / 51;
+        if (bin > 4)
+            bin = 4;
+        histogram[bin]++;
+        new_img[idx_center/3].r = read_img[idx_center];
+        new_img[idx_center/3].g = read_img[idx_center + 1];
+        new_img[idx_center/3].b = read_img[idx_center + 2];
+
+        idx_center = (y * width + (width - 1)) * 3;
+        grey = round(0.2126 * read_img[idx_center] + 0.7152 * read_img[idx_center + 1] + 0.0722 * read_img[idx_center + 2]);
+        bin = grey / 51;
+        if (bin > 4)
+            bin = 4;
+        histogram[bin]++;
+        new_img[idx_center/3].r = read_img[idx_center];
+        new_img[idx_center/3].g = read_img[idx_center + 1];
+        new_img[idx_center/3].b = read_img[idx_center + 2];
+    }
 
 
     convolute(read_img, new_img, width, height, histogram);
