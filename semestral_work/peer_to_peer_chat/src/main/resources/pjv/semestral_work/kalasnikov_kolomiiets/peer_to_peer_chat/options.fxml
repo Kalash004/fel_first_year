@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="view.controllers.MainOptionsController">
+  <VBox layoutX="250.0" layoutY="100.0" prefHeight="200.0" prefWidth="100.0">
+        <CheckBox fx:id="darkThemeSwitch" mnemonicParsing="false" text="Dark Mode" selected="true"/>
+  </VBox>
+</AnchorPane>
