@@ -1,0 +1,9 @@
+package models.enums.event;
+
+public enum EventType {
+    PUBLIC_MESSAGE_SEND,
+    PRIVATE_MESSAGE_SEND,
+    PUBLIC_MESSAGE_RECEIVE,
+    PRIVATE_MESSAGE_RECEIVE,
+    DISCOVER, PROGRAM_START,
+}
