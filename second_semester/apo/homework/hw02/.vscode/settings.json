@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.ejs": "html",
+        "functional": "c",
+        "*.tcc": "c",
+        "string": "c",
+        "string_view": "c",
+        "stat.h": "c",
+        "random": "c"
+    }
+}
