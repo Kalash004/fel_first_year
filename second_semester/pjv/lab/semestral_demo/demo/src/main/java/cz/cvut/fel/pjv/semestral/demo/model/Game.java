@@ -14,6 +14,7 @@ public class Game {
         topPipe.update();
         bottomPipe.update();
         bird.update();
+        checkCollisions();
     }
 
     public Drawable[] getDrawableObjects() {
@@ -23,6 +24,10 @@ public class Game {
                 new Drawable(bottomPipe.getImageId(), bottomPipe.getX(), bottomPipe.getY()),
                 new Drawable(bird.getImageId(), bird.getX(), bird.getY()),
         };
+    }
+
+    private void checkCollisions() {
+        if (bird.getBoundingBox().intersects())
     }
 
     public void birdJump() {

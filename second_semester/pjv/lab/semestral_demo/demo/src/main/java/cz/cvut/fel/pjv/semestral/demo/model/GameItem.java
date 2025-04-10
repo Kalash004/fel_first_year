@@ -1,5 +1,7 @@
 package cz.cvut.fel.pjv.semestral.demo.model;
 
+import javafx.geometry.BoundingBox;
+
 public class GameItem {
     protected ImageId imageId;
     protected double x;
@@ -21,5 +23,13 @@ public class GameItem {
 
     public double getY() {
         return y;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
     }
 }
