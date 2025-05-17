@@ -1,0 +1,88 @@
+
+program code
+
+
+build/program-riscv:     file format elf32-littleriscv
+
+
+Disassembly of section my_text:
+
+000101d4 <subroutine_fnc>:
+   101d4:	00050793          	mv	a5,a0
+   101d8:	00058513          	mv	a0,a1
+   101dc:	00011737          	lui	a4,0x11
+   101e0:	2a472703          	lw	a4,676(a4) # 112a4 <char_to_skip>
+   101e4:	00b71c63          	bne	a4,a1,101fc <subroutine_fnc+0x28>
+   101e8:	0007a683          	lw	a3,0(a5)
+   101ec:	00168713          	addi	a4,a3,1
+   101f0:	00068863          	beqz	a3,10200 <subroutine_fnc+0x2c>
+   101f4:	00000513          	li	a0,0
+   101f8:	0080006f          	j	10200 <subroutine_fnc+0x2c>
+   101fc:	00000713          	li	a4,0
+   10200:	00e7a023          	sw	a4,0(a5)
+   10204:	00008067          	ret
+
+
+
+00010208 <toplevel_fnc>:
+   10208:	fe010113          	addi	sp,sp,-32 // move stack pointer 32 donw to save some space for local variables
+   1020c:	00112e23          	sw	ra,28(sp) // save returning location to some space at prologue of the function in case function calls other sub func and it rewrites sp
+   10210:	00812c23          	sw	s0,24(sp) // values in s0 - s11 must be preserved by functions so we save it too
+   10214:	00012623          	sw	zero,12(sp) 
+ 
+ 
+   10218:	03f00893          	li	a7,63
+   1021c:	00000513          	li	a0,0
+   10220:	00b10593          	addi	a1,sp,11 //save addres of sp+11 too a1
+   10224:	00100613          	li	a2,1
+   10228:	00000073          	ecall
+
+
+   1022c:	00100793          	li	a5,1
+   10230:	04f51e63          	bne	a0,a5,1028c <toplevel_fnc+0x84> // res != 1  goto skip1
+
+
+   10234:	00000413          	li	s0,0
+   10238:	0240006f          	j	1025c <toplevel_fnc+0x54> // goto skip2
+   --- skip4 1023c:	00140413    addi	s0,s0,1
+
+   --- skip5 10240:	03f00893    li	a7,63
+   10244:	00000513          	li	a0,0
+   10248:	00b10593          	addi	a1,sp,11 //save addres of sp+11 too a1
+   1024c:	00100613          	li	a2,1
+   10250:	00000073          	ecall
+
+
+   10254:	00100793          	li	a5,1
+   10258:	02f51c63          	bne	a0,a5,10290 <toplevel_fnc+0x88> // goto skip3
+
+   --- skip2 1025c:	00b14583    lbu	a1,11(sp)
+   10260:	00c10513          	addi	a0,sp,12
+   10264:	f71ff0ef          	jal	ra,101d4 <subroutine_fnc>
+   10268:	0ff57513          	zext.b	a0,a0 // skip
+   1026c:	00a105a3          	sb	a0,11(sp)
+   10270:	fc0506e3          	beqz	a0,1023c <toplevel_fnc+0x34> // goto skip4
+
+   10274:	04000893          	li	a7,64
+   10278:	00100513          	li	a0,1
+   1027c:	00b10593          	addi	a1,sp,11
+   10280:	00100613          	li	a2,1
+   10284:	00000073          	ecall
+
+   10288:	fb9ff06f          	j	10240 <toplevel_fnc+0x38> // goto skip5
+  
+   --- skip1 1028c:	00000413    li	s0,0
+   --- skip3 10290:	00040513    mv	a0,s0
+   
+   10294:	01c12083          	lw	ra,28(sp)
+   10298:	01812403          	lw	s0,24(sp)
+   1029c:	02010113          	addi	sp,sp,32
+   102a0:	00008067          	ret
+
+program data
+
+
+build/program-riscv:     file format elf32-littleriscv
+
+Contents of section my_data:
+ 112a4 0a000000                             ....            
