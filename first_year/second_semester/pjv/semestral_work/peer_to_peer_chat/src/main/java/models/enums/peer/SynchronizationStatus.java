@@ -1,0 +1,8 @@
+package models.enums.peer;
+
+public enum SynchronizationStatus {
+    PEER_REQUESTED_CONNECTION,
+    ACKNOWLEDGED_CONNECTION,
+    PEER_REQUESTED_DISCONNECTION,
+    ACKNOWLEDGED_DISCONNECTION, NONE,
+}
