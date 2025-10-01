@@ -4,7 +4,25 @@
 #PATH./link.txt
 #PATH./a.txt
 
-END=3
+H=0
+Z=0
+
+while getopts "hz" flags; do
+    case flags in 
+        h|H)
+            H=1
+            break
+            ;;
+        z|Z)
+            Z=1
+            ;;
+    esac
+done
+
+if [[ H==1 ]] ; then
+    
+fi
+
 LINE=0
 while read LINE ; do
     if [[ ! "$LINE" == PATH* ]] ; then
